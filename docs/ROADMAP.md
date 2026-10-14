@@ -28,6 +28,8 @@ This repo distinguishes **implemented prototypes** from **live blockchain functi
 - [x] Demo supply/withdraw/borrow/repay, wallet ledger, health factors
 - [x] Asset APYs (illustrative), 70% borrow LTV and 80% liquidation threshold
 - [x] Unit tests for collateral constraints
+- [x] Deterministic 30-day interest projection with collateral-health preview and invalid-state tests
+- [ ] Persist and reconcile accrued interest with a real lending ledger (projection is read-only)
 - [ ] Real lending pools, contract-level collateral enforcement, dynamic interest accrual and audit
 
 ## Why staged?
