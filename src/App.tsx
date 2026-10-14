@@ -12,6 +12,7 @@ import { quoteSwap, SWAP_FEE_BPS } from './lib/swap'
 import { openPosition, positionMetrics, type PerpMarket, type Side, type Position } from './lib/perps'
 import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, type LendingAction } from './lib/lend'
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
+import { projectDemoInterest } from './lib/interest'
 
 type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Portfolio'
 type Notice = { message: string; error: boolean }
@@ -212,6 +213,8 @@ function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingA
   const [asset, setAsset] = useState<Asset>('BDX')
   const [amount, setAmount] = useState('1000')
   const health = lendingHealth(demo.lending)
+  const projected = useMemo(() => projectDemoInterest(demo.lending, 30), [demo.lending])
+  const projectedHealth = lendingHealth(projected.book)
   const maxAvailable = action === 'supply' ? demo.balances[asset] : action === 'withdraw' ? demo.lending.supplied[asset] ?? 0 : action === 'repay' ? Math.min(demo.balances[asset], demo.lending.borrowed[asset] ?? 0) : health.borrowCapacityUsd / priceOf(asset)
   const activeApy = action === 'supply' || action === 'withdraw' ? supplyApy[asset] : borrowApy[asset]
   const valid = amount.trim() !== '' && Number.isFinite(Number(amount)) && Number(amount) > 0 && Number(amount) <= maxAvailable + 1e-9
@@ -246,6 +249,7 @@ function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingA
         <p className="under-button"><ShieldCheck size={13}/> No live loans, yield accrual, or deposits.</p>
       </section>
     </div>
+    <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Simple APR simulation only — figures are not credited to balances and are not real yield. Debt accrues independently of collateral.</p><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
   </div>
 }
