@@ -3,7 +3,7 @@ import {
   Activity, ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, BarChart3,
   Check, ChevronDown, ChevronRight, CircleHelp, Clock3, Coins, Copy,
   ExternalLink, EyeOff, Landmark, LayoutDashboard, LockKeyhole, Menu,
-  Minus, Plus, RefreshCw, RotateCcw, ShieldCheck, TrendingDown,
+  RefreshCw, RotateCcw, ShieldCheck, TrendingDown,
   TrendingUp, Wallet, X, Zap
 } from 'lucide-react'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
