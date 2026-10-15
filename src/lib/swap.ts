@@ -75,7 +75,7 @@ export function executeDemoSwap(
   if (amount > balances[from]) throw new Error('Insufficient demo balance')
   const quote = quoteSwap(from, to, amount, 0, pools)
   if (quote.amountOut + 1e-12 < minOut) throw new Error('Quote expired or price moved beyond slippage. Review trade.')
-  const { key, pool, inputIsA, reserveIn, reserveOut } = reservesFor(pools, from, to)
+  const { key, inputIsA, reserveIn, reserveOut } = reservesFor(pools, from, to)
   const nextIn = reserveIn + amount
   const nextOut = reserveOut - quote.amountOut
   if (![nextIn, nextOut].every(validAmount)) throw new Error('Insufficient simulator liquidity')
