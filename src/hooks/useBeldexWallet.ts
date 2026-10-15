@@ -89,7 +89,7 @@ export function useBeldexWallet() {
       const current = await wallet.getBalance()
       if (details.nettype !== 'mainnet' && details.nettype !== 'testnet') throw new Error('Unsupported Beldex wallet network')
       setConnection(existing => {
-        if (!existing || existing.address !== address.address || existing.network !== details.nettype) {
+        if (!existing || existing.address !== address || existing.network !== details.nettype) {
           setError('Wallet account/network changed; reconnect before sending')
           return null
         }
@@ -114,7 +114,7 @@ export function useBeldexWallet() {
       const details = await wallet.getNetwork()
       const current = await wallet.getAddress()
       if (details.nettype !== 'testnet' || connection.network !== 'testnet' ||
-        current.address !== connection.address) throw new Error('Testnet/account verification failed. Switch to Beldex TESTNET and reconnect.')
+        current !== connection.address) throw new Error('Testnet/account verification failed. Switch to Beldex TESTNET and reconnect.')
       const balance = await wallet.getBalance()
       const { atomic } = validateTestnetSend(details.nettype, to, displayAmount, balance.unlocked)
       // One wallet-authorised send only. Unknown outcomes are NEVER auto-retried;
