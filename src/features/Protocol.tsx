@@ -105,6 +105,6 @@ export function LaunchPage() {
         {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
       </tbody></table></div>
     </div>
-    <div className="panel"><h3>What can be deployed?</h3><p className="muted smaller">The static HOXO research application can be published with a prominent demo warning, security headers and no production transaction features. A deployed website is not an approved or audited exchange, bridge or lending protocol.</p><a className="btn btn-outline" href="https://github.com/mushee-io/Hoxo-MM/blob/feat/hoxo-m1-m4-risk-and-accrual/docs/ROADMAP.md" target="_blank" rel="noreferrer">Review milestone requirements <ArrowRight size={15}/></a></div>
+    <div className="panel"><h3>What can be deployed?</h3><p className="muted smaller">The static HOXO research application can be published with a prominent demo warning, security headers and no production transaction features. A deployed website is not an approved or audited exchange, bridge or lending protocol.</p><a className="btn btn-outline" href="https://github.com/mushee-io/Hoxo-MM/blob/main/docs/ROADMAP.md" target="_blank" rel="noreferrer">Review milestone requirements <ArrowRight size={15}/></a></div>
   </div>
 }
