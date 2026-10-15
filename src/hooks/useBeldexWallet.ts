@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import { BdxRpcError, BeldexWeb3, detectProvider, fromAtomic } from '@bdxi/web3js'
-import { isTestnet, validateTestnetSend } from '../lib/testnet'
-import { clearTransferLock, readTransferLock, saveTransferLock, shouldPreserveLockAfterError, type TransferLock } from '../lib/transferSafety'
+import { isTestnet } from '../lib/testnet'
+import { executeOneApprovedTestnetSend } from '../lib/nativeTransfer'
+import { clearTransferLock, readTransferLock, shouldPreserveLockAfterError, type TransferLock } from '../lib/transferSafety'
 import { buildTestnetWalletProof, assertProofResponse, type VerifiedLocalProof } from '../lib/testnetProof'
 
 export type Connection = {
@@ -122,20 +123,16 @@ export function useBeldexWallet() {
     setBusySend(true)
     setError(null)
     try {
-      const details = await wallet.getNetwork()
-      const current = await wallet.getAddress()
-      if (details.nettype !== 'testnet' || connection.network !== 'testnet' ||
-        current !== connection.address) throw new Error('Testnet/account verification failed. Switch to Beldex TESTNET and reconnect.')
-      const balance = await wallet.getBalance()
-      if (balance.approximate) throw new Error('Wallet spendable balance is approximate. Wait for sync and refresh before sending test BDX.')
-      const { atomic } = validateTestnetSend(details.nettype, to, displayAmount, balance.unlocked)
-      // One wallet-authorised send only. Unknown outcomes are NEVER auto-retried;
-      // users should inspect their own testnet wallet before sending again.
       const key = crypto.randomUUID()
-      const lock = saveTransferLock(localStorage, key, Date.now())
-      setUnresolvedLock(lock)
-      setTransaction({ status: 'awaiting-approval', message: 'Review this testnet-only BDX transfer in your wallet.' })
-      const result = await wallet.sendTransaction({ to, amount: atomic, priority: 1, idempotencyKey: key })
+      const result = await executeOneApprovedTestnetSend(wallet, localStorage, {
+        expectedAddress: connection.address,
+        expectedNetwork: connection.network,
+        recipient: to,
+        displayAmount,
+      }, key, Date.now(), () => {
+        setUnresolvedLock(readTransferLock(localStorage))
+        setTransaction({ status: 'awaiting-approval', message: 'Review this testnet-only BDX transfer in your wallet.' })
+      })
       clearTransferLock(localStorage)
       setUnresolvedLock(null)
       setTransaction({ status: 'broadcast', txHash: result.txHash, fee: fromAtomic(result.fee), operationId: result.operationId, message: 'Wallet returned a transaction hash. Check your wallet for chain confirmation.' })
