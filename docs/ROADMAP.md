@@ -6,6 +6,7 @@ Updated: 15 October 2026
 
 ## Milestone 1 — App foundation and Beldex wallet
 - [x] React 18, TypeScript, Vite and responsive navigation
+- [x] Public Beldex HF22 Privacy Token metadata discovery and exact token-ID lookup (no private wallet data)
 - [x] Beldex wallet connection through `@bdxi/web3js`, user-approved native BDX TESTNET transfer flow, capped at 5 test BDX
 - [x] Actual wallet total, unlocked BDX, network and scan height displayed in live Portfolio separately from fictitious demo balances; verify network/address before every testnet send, block mainnet sending
 - [x] Defensive parsing of browser-local demo activity, balances, positions and pools
@@ -19,6 +20,7 @@ Updated: 15 October 2026
 ## Milestone 2 — HOXO Swap
 - [x] Simulated token quote, slippage and price-impact UX
 - [x] Beldex-wallet-approved, verified off-chain Swap proposal signature (NOT a settled testnet trade)
+- [x] Public Privacy Token testnet catalog/asset descriptor lookup (not wallet token transfers)
 - [x] Mutable demo AMM pool reserves and minimum-output revalidation
 - [x] Explicit fictional balances, local activity and trade limits
 - [ ] Real verified Beldex on-chain liquidity, order authorisation and atomic settlement
@@ -34,6 +36,7 @@ Updated: 15 October 2026
 ## Milestone 4 — HOXO Lend
 - [x] Local supply, borrow, repay and withdrawal simulation
 - [x] Beldex-wallet-approved, verified off-chain lending proposal signature (NOT a funded loan)
+- [x] Read-only public testnet asset catalog alongside demo lending markets
 - [x] Example fixed APRs, collateral LTV and health factor
 - [x] 30-day projection and manual 1/7-day local interest accrual
 - [x] Risk-reducing actions allowed even when account is undercollateralised
@@ -59,7 +62,7 @@ Updated: 15 October 2026
 - [ ] Fee revenue accounting and BDX buyback/burn **only if supported and approved** (not implemented)
 
 ## Milestone 7 — Mainnet preparation and phased launch
-- [x] Launch-readiness screen showing explicit production blockers plus real connected Beldex wallet network and scan height
+- [x] Launch-readiness screen showing explicit production blockers, real Beldex wallet network and scan height, and read-only public token registry / official-wallet registration instructions
 - [x] Vite/Vercel research-preview configuration, noindex and security headers
 - [x] Deployment, security and operations runbooks
 - [ ] Funded two-wallet testnet BDX transfer verified; Privacy Token transfer integration; audited financial contract deployments

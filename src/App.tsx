@@ -16,6 +16,7 @@ import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest
 import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetIntentPanel } from './features/TestnetIntents'
+import { TestnetAssetCatalogue } from './features/TestnetAssets'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
 import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
@@ -159,6 +160,7 @@ function Swap({ demo, onSwap, wallet }: { demo: DemoState; wallet: ReturnType<ty
         <div className="feature-row"><EyeOff size={20}/><span><b>User-directed execution</b><small>Real settlements require audited infrastructure</small></span></div>
       </section>
     </div>
+    <TestnetAssetCatalogue purpose="swap"/>
     <TestnetIntentPanel kind="swap" wallet={wallet}/>
   </div>
 }
@@ -263,6 +265,7 @@ function Lend({ demo, onAction, onAccrue, wallet }: { demo: DemoState; wallet: R
     </div>
     <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Fixed example APRs. Projected values are not credited automatically, and they do not represent real yield. Manually advance the demonstration clock below to apply simulated interest to the local ledger.</p><div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(1)}>Advance 1 demo day</button><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(7)}>Advance 7 demo days</button></div><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
+    <TestnetAssetCatalogue purpose="lend"/>
     <TestnetIntentPanel kind="lend" wallet={wallet}/>
   </div>
 }
@@ -290,13 +293,14 @@ function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => 
       <p className="muted smaller">Only native BDX is available through the published wallet SDK. The BTC, ETH and USDT demo balances below are not holdings in your wallet.</p>
       {wallet.transaction && <div className="route-result">
         <div className="route-result-title"><b>Latest wallet send: {wallet.transaction.status}</b><span className="subtle-pill">BDX TESTNET</span></div>
-        {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash}</p>}
+        {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash} · <a href={"https://testnet.beldex.dev/tx/" + encodeURIComponent(wallet.transaction.txHash)} target="_blank" rel="noreferrer">Open testnet explorer <ExternalLink size={12}/></a></p>}
         <p className="muted smaller">{wallet.transaction.message || 'Check your extension for chain confirmation'}</p>
       </div>}
       {wallet.signedIntents.length > 0 && <div className="route-result"><b>Verified wallet-signed proposals (not transactions)</b>
         {wallet.signedIntents.map(intent => <p key={intent.message} className="muted smaller">{intent.kind.toUpperCase()} · Wallet signature verified · No assets exchanged or borrowed</p>)}
       </div>}
     </section>
+    <TestnetAssetCatalogue purpose="portfolio"/>
     <div className="portfolio-hero"><div><div className="eyebrow">TOTAL DEMO NET WORTH</div><div className="portfolio-total">{money(portfolioValue)}</div><span className="muted">Not connected to any blockchain balances</span></div><div className="portfolio-decoration"><ShieldCheck size={72}/></div></div>
     <div className="overview-columns">
       <div className="panel"><CardTitle right={<span className="subtle-pill">SIMULATED</span>}>Asset balances</CardTitle><div className="table-scroll"><table className="data-table"><thead><tr><th>Token</th><th>Balance</th><th>Demo value</th></tr></thead><tbody>{assetSymbols.map(a => <tr key={a}><td><span className="asset-cell"><Coin symbol={a}/><span><b>{a}</b><small>{ASSETS[a].name}</small></span></span></td><td>{displayNumber(demo.balances[a], 6)}</td><td>{money(demo.balances[a] * priceOf(a))}</td></tr>)}</tbody></table></div></div>

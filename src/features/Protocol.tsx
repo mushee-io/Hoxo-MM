@@ -5,6 +5,7 @@ import { CHAINS, findDemoRoutes, MAX_DEMO_TRADE_USD, type ChainId, type RoutePla
 import { POLICY, type DemoPolicyState, LIVE_SETTLEMENT_ENABLED } from '../lib/security'
 import { productionReadiness, READINESS_GATES } from '../lib/readiness'
 import { estimateDemoEconomics } from '../lib/economics'
+import { TestnetAssetCatalogue } from './TestnetAssets'
 import { type DemoState } from '../lib/demo'
 
 export function RoutesPage({ demo, policy, onExecute }: {
@@ -114,6 +115,7 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer }: {
       <p className="muted smaller">Live wallet connection uses the official Beldex SDK. Wallet scan height and wallet-returned hashes are not independent proof that a particular transaction reached finality. Swap settlement, lending contracts and private-asset transfer remain unavailable.</p>
       <p className="muted smaller">The release dashboard is operational on testnet as a readiness viewer; it does not deploy contracts or unlock exchange functionality.</p>
     </div>
+    <TestnetAssetCatalogue purpose="launch"/>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
         {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
