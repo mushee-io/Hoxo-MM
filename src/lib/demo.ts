@@ -10,9 +10,10 @@ export type DemoState = {
   positions: Position[]
   activity: Activity[]
   pools: PoolBook
+  poolFeesUsd: number
 }
 export function initialState(): DemoState {
-  return { balances: { ...demoBalances }, lending: emptyBook(), positions: [], activity: [], pools: initialDemoPools() }
+  return { balances: { ...demoBalances }, lending: emptyBook(), positions: [], activity: [], pools: initialDemoPools(), poolFeesUsd: 0 }
 }
 const storageKey = 'hoxo-demo-v1'
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -45,19 +46,21 @@ export function loadDemo(): DemoState {
     if (!raw) return initialState()
     const saved: unknown = JSON.parse(raw)
     if (!isRecord(saved)) return initialState()
-    const { balances, lending, positions, activity, pools } = saved
+    const { balances, lending, positions, activity, pools, poolFeesUsd } = saved
     if (!isRecord(balances) || !assetSymbols.every(a => validNonnegative(balances[a]))) return initialState()
     if (!isRecord(lending) || !validLedger(lending.supplied) || !validLedger(lending.borrowed)) return initialState()
     if (!Array.isArray(positions) || !positions.every(validPosition)) return initialState()
     if (!Array.isArray(activity) || !activity.every(validActivity)) return initialState()
     // Transparently migrate v1 browser simulations that predate mutable pools.
     if (pools !== undefined && !validPools(pools)) return initialState()
+    if (poolFeesUsd !== undefined && !validNonnegative(poolFeesUsd)) return initialState()
     return {
       balances: Object.fromEntries(assetSymbols.map(a => [a, balances[a]])) as WalletBalances,
       lending: lending as LendingBook,
       positions: positions.slice(0, 100),
       activity: activity.slice(0, 50),
       pools: pools === undefined ? initialDemoPools() : pools,
+      poolFeesUsd: poolFeesUsd === undefined ? 0 : poolFeesUsd,
     }
   } catch { return initialState() }
 }
