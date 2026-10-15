@@ -75,6 +75,19 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
       </section>
     </div>
     <section className="panel">
+      <div className="card-heading"><h3>Testnet wallet signature verification</h3><span className="subtle-pill">NON-CUSTODIAL</span></div>
+      <p className="muted smaller">Prove control of this Beldex testnet wallet using a fresh one-time message approved inside the wallet. The browser verifies its signature through the official SDK. This demonstrates wallet signing, not a financial trade, not token privacy and not authenticated server login.</p>
+      <button className="btn btn-outline" disabled={!testnet || wallet.busyProof} onClick={() => void wallet.proveTestnetWallet()}>
+        <LockKeyhole size={15}/>{wallet.busyProof ? 'Approve the signature in your wallet…' : 'Sign and verify testnet ownership'}
+      </button>
+      {wallet.localProof && <div className="route-result" style={{ marginTop: 16 }}>
+        <div className="route-result-title"><b>Testnet signature</b><span className="subtle-pill">{wallet.localProof.verified ? 'VERIFIED' : 'NOT VERIFIED'}</span></div>
+        <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Message: {wallet.localProof.message}</p>
+        <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Signature: {wallet.localProof.signature}</p>
+        <p className="muted smaller">This proof is kept in memory only and is not a server-issued authentication challenge.</p>
+      </div>}
+    </section>
+    <section className="panel">
       <div className="card-heading"><h3>Privacy Token support — next integration</h3><span className="subtle-pill">PENDING PUBLISHED API</span></div>
       <p className="muted smaller">Beldex Confidential Assets (Privacy Tokens) launched on testnet. The public `@bdxi/web3js` v1.0.1 SDK presently documents BDX native send and read operations but does not expose a documented Privacy Token issuance/transfer method. HOXO will not claim to issue a token or construct a private asset transfer using an invented RPC call.</p>
       <p className="muted smaller">Required: obtain the Beldex-supported Privacy Token creation/transfer interface, integrate asset-specific balances and exact units, use in-wallet authorisation, test issuance and two-wallet transfers, and verify confirmation in an owned testnet wallet before enabling any real private exchange flow.</p>
