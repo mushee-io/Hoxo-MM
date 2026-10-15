@@ -72,9 +72,11 @@ export function isTokenCatalogue(raw: unknown): raw is TokenCatalogue {
   const x = raw as Record<string, unknown>
   return x.network === 'beldex-testnet' && x.source === 'official-wallet-configured-testnet-lws' &&
     Array.isArray(x.tokens) && x.tokens.length <= TOKEN_PAGE_LIMIT &&
-    x.tokens.every(token => parseTokenDescriptor({
+    x.tokens.every(token => token !== null && typeof token === 'object' && parseTokenDescriptor({
       token_id: token.tokenId, ticker: token.ticker, full_name: token.name,
       decimal_point: token.decimals, current_supply: token.currentSupplyAtomic,
       total_max_supply: token.maximumSupplyAtomic, owner: token.owner,
-    })) && typeof x.warning === 'string'
+    })) !== null && typeof x.warning === 'string' &&
+    typeof x.obtainedAt === 'string' && !Number.isNaN(Date.parse(x.obtainedAt)) &&
+    Number.isSafeInteger(x.offset) && Number(x.offset) >= 0
 }
