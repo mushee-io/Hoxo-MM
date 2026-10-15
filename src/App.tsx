@@ -293,7 +293,7 @@ function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => 
       <p className="muted smaller">Only native BDX is available through the published wallet SDK. The BTC, ETH and USDT demo balances below are not holdings in your wallet.</p>
       {wallet.transaction && <div className="route-result">
         <div className="route-result-title"><b>Latest wallet send: {wallet.transaction.status}</b><span className="subtle-pill">BDX TESTNET</span></div>
-        {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash}</p>}
+        {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash} · <a href={"https://testnet.beldex.dev/tx/" + encodeURIComponent(wallet.transaction.txHash)} target="_blank" rel="noreferrer">Open testnet explorer <ExternalLink size={12}/></a></p>}
         <p className="muted smaller">{wallet.transaction.message || 'Check your extension for chain confirmation'}</p>
       </div>}
       {wallet.signedIntents.length > 0 && <div className="route-result"><b>Verified wallet-signed proposals (not transactions)</b>
