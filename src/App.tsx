@@ -13,15 +13,21 @@ import { MAINTENANCE_MARGIN_RATE, openPosition, positionMetrics, settleDemoPosit
 import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, type LendingAction } from './lib/lend'
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
 import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest'
+import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
+import { executeDemoRoute, type RoutePlan } from './lib/routes'
+import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
-type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Portfolio'
+type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Routes' | 'Portfolio' | 'Security' | 'Launch'
 type Notice = { message: string; error: boolean }
 const nav = [
   { name: 'Overview' as const, icon: LayoutDashboard },
   { name: 'Swap' as const, icon: ArrowLeftRight },
   { name: 'Perps' as const, icon: BarChart3 },
   { name: 'Lend' as const, icon: Landmark },
+  { name: 'Routes' as const, icon: ArrowLeftRight },
   { name: 'Portfolio' as const, icon: Wallet },
+  { name: 'Security' as const, icon: LockKeyhole },
+  { name: 'Launch' as const, icon: Zap },
 ]
 
 const iconSymbol: Record<Asset, string> = { BDX: 'B', USDT: '₮', BTC: '₿', ETH: 'Ξ' }
@@ -94,6 +100,7 @@ function Overview({ demo, openPage }: { demo: DemoState; openPage: (page: Page) 
         <button className="product-tile" onClick={() => openPage('Swap')}><span className="product-icon teal"><ArrowLeftRight size={22}/></span><span><b>Hoxo Swap</b><small>Route illustrative token swaps</small></span><ChevronRight size={18}/></button>
         <button className="product-tile" onClick={() => openPage('Perps')}><span className="product-icon purple"><BarChart3 size={22}/></span><span><b>Hoxo Perps</b><small>Explore long and short positions</small></span><ChevronRight size={18}/></button>
         <button className="product-tile" onClick={() => openPage('Lend')}><span className="product-icon blue"><Landmark size={22}/></span><span><b>Hoxo Lend</b><small>Simulate supply and borrow markets</small></span><ChevronRight size={18}/></button>
+        <button className="product-tile" onClick={() => openPage('Routes')}><span className="product-icon teal"><ArrowLeftRight size={22}/></span><span><b>Hoxo Routes</b><small>Explore offline multi-hop liquidity</small></span><ChevronRight size={18}/></button>
         <div className="privacy-box"><LockKeyhole size={19}/><div><b>Privacy by design</b><p>Beldex wallet connection is genuine. Trading and lending are isolated simulations until secure settlement is available.</p></div></div>
       </div>
     </div>
@@ -272,6 +279,7 @@ export default function App() {
   const [mobileNav, setMobileNav] = useState(false)
   const [demo, setDemo] = useState<DemoState>(loadDemo)
   const [shock, setShock] = useState(0)
+  const [policy, setPolicy] = useState(defaultDemoPolicy)
   const [notice, setNotice] = useState<Notice | null>(null)
   const wallet = useBeldexWallet()
   useEffect(() => saveDemo(demo), [demo])
@@ -282,6 +290,7 @@ export default function App() {
   }
   function handleSwap(from: Asset, to: Asset, amount: number, minOut: number) {
     try {
+      assertDemoOperation('swap', policy, amount * priceOf(from))
       const trade = executeDemoSwap(demo.balances, demo.pools, from, to, amount, minOut)
       setDemo(pushActivity({ ...demo, balances: trade.balances, pools: trade.pools }, 'Simulated pool swap', from + ' → ' + to, displayNumber(trade.quote.amountOut, 5) + ' ' + to))
       notify('Demo swap executed; the simulated pool reserves have updated. No blockchain transaction.')
@@ -290,6 +299,7 @@ export default function App() {
   function handleOpen(market: PerpMarket, side: Side, margin: number, leverage: number) {
     if (!Number.isFinite(margin) || margin <= 0 || demo.balances.USDT < margin) return notify('Insufficient demo USDT balance.', true)
     try {
+      assertDemoOperation('open-perp', policy, margin * leverage, leverage)
       const position = openPosition(market, side, margin, leverage, newId())
       setDemo(pushActivity({ ...demo, balances: { ...demo.balances, USDT: demo.balances.USDT - margin }, positions: [position, ...demo.positions] }, 'Opened demo ' + side, market + '-PERP · ' + leverage + '×', money(margin * leverage)))
       notify('Demo ' + side + ' opened. Margin is only held in the simulator.')
@@ -297,6 +307,7 @@ export default function App() {
   }
   function handleClose(p: Position) {
     try {
+      assertDemoOperation('close-perp', policy, 0)
       const settlement = settleDemoPosition(demo.balances, demo.positions, p.id, priceOf(p.market) * (1 + shock / 100))
       setDemo(pushActivity({ ...demo, balances: settlement.balances, positions: settlement.positions }, settlement.liquidated ? 'Demo liquidation' : 'Closed demo ' + p.side, p.market + '-PERP · ' + displayNumber(settlement.metrics.roi, 1) + '% ROI', money(settlement.payout)))
       notify(settlement.liquidated ? 'Simulated liquidation completed. No margin returned.' : 'Position settled in simulation. No real assets transferred.')
@@ -304,6 +315,7 @@ export default function App() {
   }
   function handleLend(action: LendingAction, asset: Asset, amount: number) {
     try {
+      assertDemoOperation(action, policy, amount * priceOf(asset))
       const result = applyLendingAction(demo.lending, demo.balances, action, asset, amount)
       setDemo(pushActivity({ ...demo, balances: result.balances, lending: result.book }, 'Demo ' + action, asset + ' lending market', displayNumber(amount, 5) + ' ' + asset))
       notify('Demo ' + action + ' completed. No assets moved on-chain.')
@@ -311,11 +323,20 @@ export default function App() {
   }
   function handleAccrue(days: number) {
     try {
+      assertDemoOperation('accrue', policy, 0)
       const projection = accrueDemoInterest(demo.lending, days * YEAR_MS / 365)
       const book = projection.book
       setDemo(pushActivity({ ...demo, lending: book }, 'Simulated interest', days + ' demonstration days', 'Lending ledger updated'))
       notify(days + ' demo days of illustrative interest applied locally; no real yield or debt created.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Interest simulation rejected', true) }
+  }
+  function handleRoute(route: RoutePlan) {
+    try {
+      assertDemoOperation('route', policy, route.amountIn * priceOf(route.path[0]))
+      const result = executeDemoRoute(route, demo.balances, demo.pools)
+      setDemo(pushActivity({ ...demo, balances: result.balances, pools: result.pools }, 'Demo liquidity route', route.path.join(' → '), displayNumber(result.amountOut, 5) + ' ' + route.path[route.path.length - 1]))
+      notify('Local demonstration route completed. No blockchain transaction or bridge transfer.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Demo routing refused', true) }
   }
   function reset() { setDemo(initialState()); setShock(0); notify('Simulation reset to default demo balances.') }
   function go(next: Page) { setPage(next); setMobileNav(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
@@ -348,7 +369,10 @@ export default function App() {
         {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap}/>}
         {page === 'Perps' && <Perps demo={demo} shock={shock} onShock={setShock} onOpen={handleOpen} onClose={handleClose}/>}
         {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
+        {page === 'Routes' && <RoutesPage demo={demo} policy={policy} onExecute={handleRoute}/>}
         {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset}/>}
+        {page === 'Security' && <SecurityPage policy={policy} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
+        {page === 'Launch' && <LaunchPage/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
     </div>
