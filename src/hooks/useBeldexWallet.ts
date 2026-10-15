@@ -88,16 +88,14 @@ export function useBeldexWallet() {
       const address = await wallet.getAddress()
       const current = await wallet.getBalance()
       if (details.nettype !== 'mainnet' && details.nettype !== 'testnet') throw new Error('Unsupported Beldex wallet network')
-      setConnection(existing => {
-        if (!existing || existing.address !== address || existing.network !== details.nettype) {
-          setError('Wallet account/network changed; reconnect before sending')
-          return null
-        }
-        return { ...existing, unlocked: fromAtomic(current.unlocked), unlockedAtomic: current.unlocked, approximate: Boolean(current.approximate), height: current.height }
-      })
+      if (!connection || connection.address !== address || connection.network !== details.nettype) {
+        invalidate()
+        return
+      }
+      setConnection({ ...connection, unlocked: fromAtomic(current.unlocked), unlockedAtomic: current.unlocked, approximate: Boolean(current.approximate), height: current.height })
       setError(null)
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not refresh wallet balance') }
-  }, [])
+  }, [connection, invalidate])
 
   const sendTestnet = useCallback(async (to: string, displayAmount: string): Promise<void> => {
     if (inFlight.current || busySend) return
