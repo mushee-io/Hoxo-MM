@@ -4,7 +4,7 @@
 
 HOXO is a Bluefin-inspired interface for privacy-native decentralised finance, being developed for the Beldex ecosystem. **The Testnet tab additionally supports a real, wallet-approved native BDX transfer on Beldex TESTNET; this is separate from all simulated DeFi actions.** The repository now provides the **Milestones 1–7 prototype workstreams**. This means UI, simulation engines, integration research, operational controls, deployment hardening and release criteria — **not** seven production-grade mainnet protocols.
 
-> **IMPORTANT:** Only explicit, user-approved **native testnet BDX sends** can broadcast an actual transaction. No real token exchange, Privacy Token transfer/issuance, leveraged trade, loan, custody, collateral settlement, yield accrual or bridge transaction is performed. All balances, pools, rates and prices in the trading UI are illustrative local browser data. The separate Beldex Extension Wallet connection can read authorised BDX account information but is never used to execute trades.
+> **IMPORTANT:** Only explicit, user-approved **native testnet BDX sends** can broadcast an actual transaction. Signed Swap and Lend proposals are **wallet signatures only**; they never exchange assets, provide loans, or settle on-chain. No real token exchange, Privacy Token transfer/issuance, leveraged trade, loan, custody, collateral settlement, yield accrual or bridge transaction is performed. All balances, pools, rates and prices in the trading UI are illustrative local browser data. The separate Beldex Extension Wallet connection can read authorised BDX account information but is never used to execute trades.
 
 ## Quick start
 
@@ -28,9 +28,9 @@ npm run build
 | Milestone | What this repository actually provides | Real-money status |
 | --- | --- | --- |
 | M1 Beldex foundation | Wallet-approved BDX balance and native TESTNET BDX transfer, React/TS/Vite app and strict data separation | Funded two-wallet E2E not yet verified; Privacy Token transactions unavailable in published SDK |
-| M2 HOXO Swap | Six stateful browser-local constant-product pools, slippage checks and balances | No live liquidity or atomically settled swaps |
+| M2 HOXO Swap | Six stateful browser-local pools, slippage checks, plus wallet-verified **off-chain** testnet proposal signatures | No live liquidity, token exchange or atomically settled swaps |
 | M3 HOXO Perps | Demonstration long/short trading, isolated margin and liquidation-aware position closure | No live matching, settlement, vaults or price oracles |
-| M4 HOXO Lend | Demonstration supply/borrow/repay/withdraw, LTV controls and simple interest accrual | No enforceable collateral, loans or market rates |
+| M4 HOXO Lend | Demonstration supply/borrow/repay/withdraw, LTV controls, interest and signed **off-chain** testnet proposals | No enforceable collateral, loans or market rates |
 | M5 Cross-chain routing | Direct vs two-hop local quote comparison, expiry limits and blocked external-chain routes | **No live bridges** |
 | M6 Protocol security | Browser-demo pause, position/trade limits, hypothetical fee/BDX buyback allocation, fail-closed live settlement guard and threat-model documents | Requires authenticated/enforceable production controls and audits |
 | M7 Launch readiness | Readiness page, Vercel research-preview headers, robots exclusion, operations and release runbooks | **Production blocked** |
@@ -44,8 +44,8 @@ npm run build
 - **Lend:** simulated collateral and borrowing ledger, 1/7-day manual accrual
 - **Routes:** compare direct and two-hop quote paths; external chain destinations show unavailable
 - **Security:** browser-session pause and example exposure limits
-- **Launch:** explicit blocking gates before any production use
-- **Portfolio:** synthetic balances, demo positions and local activity ledger
+- **Launch:** live wallet network and scan-height readout alongside explicit blocking gates before production use
+- **Portfolio:** live wallet-authorised BDX total/unlocked balances and network height **separated** from synthetic tokens and demo positions
 
 ## Repository map
 
@@ -53,6 +53,8 @@ npm run build
 - `src/features/Protocol.tsx` — M5–M7 route, security and launch screens
 - `src/hooks/useBeldexWallet.ts` — Beldex wallet authorised connection, balances and native testnet-only BDX transfer
 - `src/features/BeldexTestnet.tsx` and `src/lib/testnet.ts` — explicit real test BDX transfer UI, network/amount/fee-reserve guards
+- `src/features/TestnetIntents.tsx` and `src/lib/testnetIntents.ts` — wallet-signed, verified **off-chain** testnet Swap/Lend proposals (no actual settlement)
+- `docs/TESTNET_EXECUTION_MATRIX.md` — what is native chain activity, wallet-signed only, and purely demo
 - `docs/BELDEX_TESTNET.md` — funded two-wallet test plan, transfer recovery guidance and current Privacy Token integration blockers
 - `src/lib/nativeTransfer.ts`, `src/lib/transferSafety.ts` — single-send SDK boundary and privacy-minimising unknown-outcome guard
 - `src/lib/testnetProof.ts` — local testnet signature proof with independent wallet verification; **not** authentication
