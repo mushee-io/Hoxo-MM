@@ -276,3 +276,7 @@ nav{display:grid;gap:5px}
 .route-path{display:flex;align-items:center;gap:8px;color:#88e0cf;font-size:12px;margin-top:14px}
 .readiness-requirement{min-width:240px;max-width:520px;white-space:normal!important;line-height:1.5;font-size:11px}
 @media(max-width:650px){.route-fields{grid-template-columns:1fr}.route-result-metrics{align-items:flex-start}.route-result-metrics span{min-width:120px}}
+
+/* Back to the public HOXO landing page from any workspace screen */
+.breadcrumb-home{border:0;background:transparent;color:#91ead3;font:inherit;padding:4px 0;cursor:pointer;font-weight:700}
+.breadcrumb-home:hover{text-decoration:underline;color:#d8fff0}
