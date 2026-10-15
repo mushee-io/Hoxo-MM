@@ -46,6 +46,7 @@ Updated: 15 October 2026
 - [x] Demonstration notional, leverage and borrowing caps
 - [x] Hard-disabled live execution and documented release gates
 - [x] Threat-model and incident-response documentation
+- [x] Illustrative AMM fee accounting and proposed LP/protocol/treasury allocation model; no BDX buybacks or burns executed
 - [x] CI typecheck, unit tests and static build
 - [ ] Authenticated production pause, rate limiting, key custody and encrypted backup operations
 - [ ] Independent smart contract, privacy and economic audits
