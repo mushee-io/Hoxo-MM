@@ -8,8 +8,8 @@ import {
 } from 'lucide-react'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
 import { ASSETS, assetSymbols, displayNumber, money, priceOf, type Asset } from './lib/markets'
-import { quoteSwap, SWAP_FEE_BPS } from './lib/swap'
-import { openPosition, positionMetrics, type PerpMarket, type Side, type Position } from './lib/perps'
+import { executeDemoSwap, quoteSwap, SWAP_FEE_BPS } from './lib/swap'
+import { MAINTENANCE_MARGIN_RATE, openPosition, positionMetrics, settleDemoPosition, type PerpMarket, type Side, type Position } from './lib/perps'
 import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, type LendingAction } from './lib/lend'
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
 import { projectDemoInterest } from './lib/interest'
@@ -107,8 +107,8 @@ function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Ass
   const [slippage, setSlippage] = useState('0.5')
   const quantity = Number(amount)
   const quote = useMemo(() => {
-    try { return quoteSwap(from, to, quantity, Number(slippage)) } catch { return null }
-  }, [from, to, quantity, slippage])
+    try { return quoteSwap(from, to, quantity, Number(slippage), demo.pools) } catch { return null }
+  }, [from, to, quantity, slippage, demo.pools])
   const amountValid = amount.trim() !== '' && Number.isFinite(quantity) && quantity > 0
   const sufficient = amountValid && quantity <= demo.balances[from]
   const swapPair = () => { setFrom(to); setTo(from); setAmount('') }
@@ -132,12 +132,12 @@ function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Ass
         </div>
         <div className="swap-settings"><span>Slippage tolerance</span><div className="slip-options">{['0.1', '0.5', '1.0'].map(s => <button key={s} className={slippage === s ? 'selected' : ''} onClick={() => setSlippage(s)}>{s}%</button>)}</div></div>
         <div className="quote-breakdown">
-          <div><span>Illustrative price</span><b>1 {from} ≈ {displayNumber(priceOf(from) / priceOf(to), 6)} {to}</b></div>
+          <div><span>Estimated execution rate · demo</span><b>1 {from} ≈ {quote ? displayNumber(quote.effectiveRate, 6) : "—"} {to}</b></div>
           <div><span>Pool fee ({SWAP_FEE_BPS / 100}%)</span><b>{quote ? money(quote.feeUsd) : '—'}</b></div>
           <div><span>Price impact</span><b>{quote ? displayNumber(quote.priceImpactPct, 3) + '%' : '—'}</b></div>
           <div><span>Minimum received</span><b>{quote ? displayNumber(quote.minOut, 6) + ' ' + to : '—'}</b></div>
         </div>
-        <button className="btn btn-primary full-width trade-cta" disabled={!quote || !sufficient} onClick={() => quote && onSwap(from, to, quantity, quote.amountOut)}>{!amountValid ? 'Enter an amount' : !sufficient ? 'Insufficient demo balance' : 'Simulate swap'}<ArrowRight size={17}/></button>
+        <button className="btn btn-primary full-width trade-cta" disabled={!quote || !sufficient} onClick={() => quote && onSwap(from, to, quantity, quote.minOut)}>{!amountValid ? 'Enter an amount' : !sufficient ? 'Insufficient demo balance' : 'Simulate swap'}<ArrowRight size={17}/></button>
         <p className="under-button"><ShieldCheck size={13}/> No real assets are transferred. All values are examples.</p>
       </section>
       <section className="panel trade-info-panel">
@@ -175,7 +175,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
           <input type="range" aria-label="Simulated market price change" min="-25" max="25" step="1" value={shock} onChange={e => onShock(Number(e.target.value))}/>
           <div className="range-ends"><span>-25% downside</span><button onClick={() => onShock(0)}>Reset price</button><span>+25% upside</span></div>
         </div>
-        <div className="mini-metrics"><div><span>Index price</span><b>{money(priceOf(market))}</b></div><div><span>Mark price</span><b>{money(mark)}</b></div><div><span>Maintenance margin</span><b>5%</b></div><div><span>Funding</span><b>Not modelled</b></div></div>
+        <div className="mini-metrics"><div><span>Index price</span><b>{money(priceOf(market))}</b></div><div><span>Mark price</span><b>{money(mark)}</b></div><div><span>Maintenance margin</span><b>{MAINTENANCE_MARGIN_RATE * 100}%</b></div><div><span>Funding</span><b>Not modelled</b></div></div>
       </section>
       <section className="panel order-panel">
         <CardTitle right={<span className="subtle-pill">ISOLATED</span>}>Place demo order</CardTitle>
@@ -200,7 +200,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Market</th><th>Side</th><th>Notional</th><th>Entry / Mark</th><th>Liquidation</th><th>Unrealised P&L</th><th></th></tr></thead><tbody>
         {demo.positions.map(p => {
           const metrics = positionMetrics(p, priceOf(p.market) * (1 + shock / 100))
-          return <tr key={p.id}><td><b>{p.market}-PERP</b><small className="block-muted">{p.leverage}× leverage</small></td><td><span className={'side-pill ' + p.side}>{p.side.toUpperCase()}</span></td><td>{money(metrics.notional)}</td><td>{money(p.entry)}<small className="block-muted">{money(priceOf(p.market) * (1 + shock / 100))}</small></td><td>{money(metrics.liquidationPrice)}</td><td className={metrics.pnl >= 0 ? 'positive-text' : 'negative-text'}>{money(metrics.pnl)}<small className="block-muted">{displayNumber(metrics.roi, 2)}% ROI</small>{metrics.liquidatable && <small className="negative-text block-muted">Liquidatable</small>}</td><td><button className="mini-btn" onClick={() => onClose(p)}>Close demo</button></td></tr>
+          return <tr key={p.id}><td><b>{p.market}-PERP</b><small className="block-muted">{p.leverage}× leverage</small></td><td><span className={'side-pill ' + p.side}>{p.side.toUpperCase()}</span></td><td>{money(metrics.notional)}</td><td>{money(p.entry)}<small className="block-muted">{money(priceOf(p.market) * (1 + shock / 100))}</small></td><td>{money(metrics.liquidationPrice)}</td><td className={metrics.pnl >= 0 ? 'positive-text' : 'negative-text'}>{money(metrics.pnl)}<small className="block-muted">{displayNumber(metrics.roi, 2)}% ROI</small>{metrics.liquidatable && <small className="negative-text block-muted">Liquidatable</small>}</td><td><button className="mini-btn" onClick={() => onClose(p)}>{metrics.liquidatable ? "Liquidate demo" : "Close demo"}</button></td></tr>
         })}
         {demo.positions.length === 0 && <tr><td colSpan={7}><div className="empty-table"><BarChart3 size={27}/><b>No positions yet</b><span>Open a simulated long or short to get started.</span></div></td></tr>}
       </tbody></table></div>
@@ -280,11 +280,12 @@ export default function App() {
   function pushActivity(data: DemoState, label: string, detail: string, amount?: string): DemoState {
     return { ...data, activity: [{ id: newId(), label, detail, date: Date.now(), amount }, ...data.activity].slice(0, 50) }
   }
-  function handleSwap(from: Asset, to: Asset, amount: number, out: number) {
-    if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(out) || out <= 0 || demo.balances[from] < amount) return notify('Invalid amount or insufficient demo balance.', true)
-    const balances = { ...demo.balances, [from]: demo.balances[from] - amount, [to]: demo.balances[to] + out }
-    setDemo(pushActivity({ ...demo, balances }, 'Simulated swap', from + ' → ' + to, displayNumber(out, 5) + ' ' + to))
-    notify('Demo swap completed. No on-chain transaction occurred.')
+  function handleSwap(from: Asset, to: Asset, amount: number, minOut: number) {
+    try {
+      const trade = executeDemoSwap(demo.balances, demo.pools, from, to, amount, minOut)
+      setDemo(pushActivity({ ...demo, balances: trade.balances, pools: trade.pools }, 'Simulated pool swap', from + ' → ' + to, displayNumber(trade.quote.amountOut, 5) + ' ' + to))
+      notify('Demo swap executed; the simulated pool reserves have updated. No blockchain transaction.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Demo trade rejected', true) }
   }
   function handleOpen(market: PerpMarket, side: Side, margin: number, leverage: number) {
     if (!Number.isFinite(margin) || margin <= 0 || demo.balances.USDT < margin) return notify('Insufficient demo USDT balance.', true)
@@ -295,10 +296,11 @@ export default function App() {
     } catch (err) { notify(err instanceof Error ? err.message : 'Position rejected', true) }
   }
   function handleClose(p: Position) {
-    const metrics = positionMetrics(p, priceOf(p.market) * (1 + shock / 100))
-    const payout = Math.max(0, metrics.equity)
-    setDemo(pushActivity({ ...demo, positions: demo.positions.filter(item => item.id !== p.id), balances: { ...demo.balances, USDT: demo.balances.USDT + payout } }, 'Closed demo ' + p.side, p.market + '-PERP · ' + displayNumber(metrics.roi, 1) + '% ROI', money(metrics.pnl)))
-    notify('Position closed in simulation. No real settlement.')
+    try {
+      const settlement = settleDemoPosition(demo.balances, demo.positions, p.id, priceOf(p.market) * (1 + shock / 100))
+      setDemo(pushActivity({ ...demo, balances: settlement.balances, positions: settlement.positions }, settlement.liquidated ? 'Demo liquidation' : 'Closed demo ' + p.side, p.market + '-PERP · ' + displayNumber(settlement.metrics.roi, 1) + '% ROI', money(settlement.payout)))
+      notify(settlement.liquidated ? 'Simulated liquidation completed. No margin returned.' : 'Position settled in simulation. No real assets transferred.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Position settlement rejected', true) }
   }
   function handleLend(action: LendingAction, asset: Asset, amount: number) {
     try {
