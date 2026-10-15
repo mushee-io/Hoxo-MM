@@ -14,13 +14,15 @@ import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, ty
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
 import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest'
 import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
+import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
 import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
-type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Routes' | 'Portfolio' | 'Security' | 'Launch'
+type Page = 'Overview' | 'Testnet' | 'Swap' | 'Perps' | 'Lend' | 'Routes' | 'Portfolio' | 'Security' | 'Launch'
 type Notice = { message: string; error: boolean }
 const nav = [
   { name: 'Overview' as const, icon: LayoutDashboard },
+  { name: 'Testnet' as const, icon: ShieldCheck },
   { name: 'Swap' as const, icon: ArrowLeftRight },
   { name: 'Perps' as const, icon: BarChart3 },
   { name: 'Lend' as const, icon: Landmark },
@@ -76,6 +78,7 @@ function Overview({ demo, openPage }: { demo: DemoState; openPage: (page: Page) 
           <button className="btn btn-ghost-light" onClick={() => openPage('Portfolio')}>Explore portfolio <ArrowRight size={17}/></button>
         </div>
         <div className="hero-note"><span className="green-dot"/> Prototype release · No real trading</div>
+        <div className="hero-buttons" style={{ marginTop: 14 }}><button className="btn btn-outline" onClick={() => openPage('Testnet')}><ShieldCheck size={16}/> Try native BDX testnet transfer <ArrowRight size={15}/></button></div>
       </div>
       <div className="hero-mark" aria-hidden="true"><div className="mark-ring"><span>H</span></div><div className="orb orb-a"/><div className="orb orb-b"/></div>
     </div>
@@ -362,10 +365,11 @@ export default function App() {
         </div>
       </header>
       <main className="content">
-        <div className="simulation-banner"><div><ShieldCheck size={17}/><span><b>Research preview:</b> Wallet connection and read-only BDX balance are real SDK calls. Swap, Perps and Lend are local simulations using fictional market data.</span></div><span className="banner-label">NO LIVE EXECUTION</span></div>
+        <div className="simulation-banner"><div><ShieldCheck size={17}/><span><b>Research preview:</b> The Testnet tab supports wallet-approved native BDX testnet transfers; Swap, Perps, Lend and Routes remain fictional local simulations. No mainnet transfers or real DeFi settlement.</span></div><span className="banner-label">TESTNET BDX ONLY</span></div>
         {wallet.error && <div className="wallet-error"><CircleHelp size={16}/><span>{wallet.error}</span><a href="https://github.com/Beldex-Coin/beldex-wallet-extension" target="_blank" rel="noreferrer">Wallet information <ExternalLink size={12}/></a></div>}
         {wallet.connection && <div className="connected-readout"><Check size={15}/><span>Connected Beldex wallet</span><span className="wallet-address">{wallet.connection.address}</span><button title="Copy wallet address" aria-label="Copy wallet address" onClick={() => { navigator.clipboard.writeText(wallet.connection!.address).then(() => notify('Wallet address copied.')).catch(() => notify('Could not copy address.', true)) }}><Copy size={13}/></button><span className="live-balance">Unlocked: {wallet.connection.unlocked} BDX{wallet.connection.approximate ? ' (approx.)' : ''} · {wallet.connection.network}</span></div>}
         {page === 'Overview' && <Overview demo={demo} openPage={go}/>}
+        {page === 'Testnet' && <BeldexTestnetPage wallet={wallet}/>}
         {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap}/>}
         {page === 'Perps' && <Perps demo={demo} shock={shock} onShock={setShock} onOpen={handleOpen} onClose={handleClose}/>}
         {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
