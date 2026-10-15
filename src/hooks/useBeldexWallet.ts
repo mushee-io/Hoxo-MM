@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { BeldexWeb3, detectProvider, fromAtomic } from '@bdxi/web3js'
+import { BdxRpcError, BeldexWeb3, detectProvider, fromAtomic } from '@bdxi/web3js'
 import { isTestnet, validateTestnetSend } from '../lib/testnet'
 
 export type Connection = {
@@ -126,7 +126,7 @@ export function useBeldexWallet() {
     } catch (cause) {
       if (BeldexWeb3.isUserRejection(cause)) {
         setTransaction({ status: 'rejected', message: 'Wallet approval was declined. Nothing was requested again.' })
-      } else if (BeldexWeb3.isUnknownOutcome(cause)) {
+      } else if (BdxRpcError.isUnknownOutcome(cause)) {
         setTransaction({ status: 'unknown', message: 'Outcome unknown: the wallet may already have broadcast this transfer. DO NOT RESEND. Check wallet history first.' })
       } else {
         const message = cause instanceof Error ? cause.message : 'Testnet transfer failed'
