@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight, Database, RefreshCw, ShieldAlert } from 'lucide-react'
 import {
-  formatAtomicAssetBalance, isTokenCatalogue, type TokenCatalogue,
-  TOKEN_PAGE_LIMIT,
+  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, type TokenCatalogue,
+  type PublicPrivacyToken, TOKEN_PAGE_LIMIT,
 } from '../lib/testnetCatalogue'
 
 export type CataloguePurpose = 'swap' | 'lend' | 'portfolio' | 'launch'
@@ -12,6 +12,33 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
   const [catalogue, setCatalogue] = useState<TokenCatalogue | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [tokenId, setTokenId] = useState('')
+  const [found, setFound] = useState<PublicPrivacyToken | null>(null)
+  const [lookupError, setLookupError] = useState('')
+  const [checkingToken, setCheckingToken] = useState(false)
+  async function verifyPublicAssetId() {
+    setLookupError('')
+    setFound(null)
+    const id = tokenId.trim()
+    if (!hexTokenId(id)) { setLookupError('Paste the full 64-character hexadecimal Privacy Token ID from your Beldex testnet wallet.'); return }
+    setCheckingToken(true)
+    try {
+      const response = await fetch('/api/testnet-token?id=' + id, { cache: 'no-store' })
+      if (!response.ok) throw new Error('The testnet LWS did not return a confirmed public descriptor for that ID.')
+      const result: unknown = await response.json()
+      if (!result || typeof result !== 'object' || !('asset' in result)) throw new Error('Unrecognised testnet asset reply')
+      const raw = (result as { asset: unknown }).asset
+      if (!raw || typeof raw !== 'object') throw new Error('Invalid public token descriptor')
+      const asset = raw as PublicPrivacyToken
+      if (asset.tokenId !== id.toLowerCase() || !/^\\d{1,40}$/.test(asset.currentSupplyAtomic) ||
+          !Number.isInteger(asset.decimals) || asset.decimals < 0 || asset.decimals > 18) {
+        throw new Error('Token data did not match the requested testnet asset ID')
+      }
+      setFound(asset)
+    } catch (cause) { setLookupError(cause instanceof Error ? cause.message : 'Public token lookup failed') }
+    finally { setCheckingToken(false) }
+  }
+
   const refresh = useCallback(() => setRevision(v => v + 1), [])
   useEffect(() => {
     const controller = new AbortController()
@@ -59,6 +86,26 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
         <button className="btn btn-outline" onClick={refresh}><RefreshCw size={14}/> Refresh registry</button>
       </div>
     </>}
+    <div className="route-result" style={{ marginTop: 18 }}>
+      <div className="card-heading"><h3>Look up a token created in your Beldex wallet</h3><span className="subtle-pill">NO KEYS REQUIRED</span></div>
+      <p className="muted smaller">The official extension has a Tokens → Register token workflow. After registering on Beldex testnet, copy the token ID from the extension and check its public descriptor here. The browser app does not create the token or read your private token balance.</p>
+      <label className="route-field">Full Privacy Token ID (64 hex characters)
+        <input type="text" value={tokenId} maxLength={64} spellCheck={false} autoComplete="off" placeholder="Paste 64-character token identifier" onChange={e => setTokenId(e.target.value)}/>
+      </label>
+      <button className="btn btn-outline" style={{ marginTop: 10 }} disabled={checkingToken} onClick={() => void verifyPublicAssetId()}>
+        {checkingToken ? 'Checking official testnet metadata…' : 'Verify testnet token ID'}
+      </button>
+      {lookupError && <p className="negative-text smaller">{lookupError}</p>}
+      {found && <div className="route-result-metrics">
+        <span>Asset on public registry<b>{found.name || found.ticker || 'Unnamed'}</b></span>
+        <span>Token ID<b style={{ overflowWrap: 'anywhere' }}>{found.tokenId.slice(0, 14)}…</b></span>
+        <span>Descriptor supply<b>{formatAtomicAssetBalance(found.currentSupplyAtomic, found.decimals)}</b></span>
+      </div>}
+    </div>
+    {purpose === 'launch' && <div className="route-result">
+      <b>Token-launch workflow on the official testnet wallet</b>
+      <p className="muted smaller">1. Connect and unlock your Beldex Extension Wallet on TESTNET. 2. Open the extension's Tokens screen and select Register token. 3. Complete the wallet's issuance details and approve in the extension. 4. Copy the resulting asset ID and verify its public metadata above. 5. Confirm issuance in the wallet before claiming success. HOXO does not perform issuance or asset transfers on your behalf.</p>
+    </div>}
     <div className="privacy-box" style={{ marginTop: 15 }}><ShieldAlert size={17}/><div><b>{purpose === 'portfolio' ? 'This is not your personal token inventory' : 'Discovery is not executable finance'}</b><p>{purpose === 'swap'
       ? 'Public token IDs can be discovered, but the wallet SDK does not offer dApps asset-specific send operations or atomic swap settlement. No real exchange is enabled.'
       : purpose === 'lend'
