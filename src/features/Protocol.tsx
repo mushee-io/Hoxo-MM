@@ -1,0 +1,100 @@
+import { useMemo, useState } from 'react'
+import { ArrowLeftRight, ArrowRight, RefreshCw, ShieldCheck, ShieldAlert, LockKeyhole } from 'lucide-react'
+import { assetSymbols, displayNumber, money, priceOf, type Asset } from '../lib/markets'
+import { CHAINS, findDemoRoutes, MAX_DEMO_TRADE_USD, type ChainId, type RoutePlan } from '../lib/routes'
+import { POLICY, type DemoPolicyState, LIVE_SETTLEMENT_ENABLED } from '../lib/security'
+import { productionReadiness, READINESS_GATES } from '../lib/readiness'
+import { type DemoState } from '../lib/demo'
+
+export function RoutesPage({ demo, policy, onExecute }: {
+  demo: DemoState
+  policy: DemoPolicyState
+  onExecute: (route: RoutePlan) => void
+}) {
+  const [from, setFrom] = useState<Asset>('BDX')
+  const [to, setTo] = useState<Asset>('ETH')
+  const [amount, setAmount] = useState('1000')
+  const [destination, setDestination] = useState<ChainId>('beldex-testnet')
+  const [refresh, setRefresh] = useState(0)
+  const amountNumber = Number(amount)
+  const info = useMemo(() => {
+    try {
+      return { quotes: findDemoRoutes(from, to, amountNumber, 0.5, demo.pools, 'beldex-testnet', destination), error: '' }
+    } catch (e) {
+      return { quotes: [] as RoutePlan[], error: e instanceof Error ? e.message : 'Could not calculate example routes' }
+    }
+  }, [from, to, amountNumber, destination, demo.pools, refresh])
+  return <div className="stack">
+    <div className="section-header"><div><div className="eyebrow">MILESTONE 05 / LIQUIDITY ROUTING</div><h1>Route explorer</h1><p>Compare browser-local swap paths and inspect external-chain integration readiness. No real cross-chain transfers.</p></div><span className="subtle-pill">RESEARCH PREVIEW</span></div>
+    <div className="overview-columns">
+      <section className="panel">
+        <div className="card-heading"><h3>Explore a route</h3><span className="subtle-pill">BDX TESTNET · DEMO</span></div>
+        <div className="route-fields">
+          <label className="route-field">From asset
+            <select value={from} onChange={e => { const next = e.target.value as Asset; if (next === to) setTo(from); setFrom(next) }}>{assetSymbols.map(a => <option key={a} value={a}>{a}</option>)}</select>
+          </label>
+          <label className="route-field">To asset
+            <select value={to} onChange={e => { const next = e.target.value as Asset; if (next === from) setFrom(to); setTo(next) }}>{assetSymbols.map(a => <option key={a} value={a}>{a}</option>)}</select>
+          </label>
+          <label className="route-field">Quantity (virtual)
+            <input type="number" min="0" step="any" value={amount} onChange={e => setAmount(e.target.value)}/>
+          </label>
+          <label className="route-field">Destination network
+            <select value={destination} onChange={e => setDestination(e.target.value as ChainId)}>
+              {(Object.keys(CHAINS) as ChainId[]).map(chain => <option key={chain} value={chain}>{CHAINS[chain].label}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="privacy-box" style={{ marginTop: 16 }}><ShieldAlert size={20}/><div><b>Bridge execution disabled</b><p>Beldex and external-chain bridge addresses, operators and trust assumptions have not been integrated or audited. External networks can reveal public activity even if the Beldex leg is confidential.</p></div></div>
+        <p className="muted smaller">Illustrative route cap: {money(MAX_DEMO_TRADE_USD)}. Preview expires after 30 seconds. All pool balances and token prices are fictional.</p>
+      </section>
+      <section className="panel">
+        <div className="card-heading"><h3>Available local paths</h3><button className="mini-btn" onClick={() => setRefresh(v => v + 1)}><RefreshCw size={13}/> Refresh</button></div>
+        {info.error && <div className="wallet-error">{info.error}</div>}
+        {destination !== 'beldex-testnet' ? <div className="empty-table"><LockKeyhole size={28}/><b>Cross-chain routes unavailable</b><span>No verified adapter for {CHAINS[destination].label} is connected. We will not fabricate quotes or accept deposits.</span></div> :
+          info.quotes.length ? info.quotes.map(route => <div className="route-result" key={route.id}>
+            <div className="route-result-title"><strong>{route.id === 'direct' ? 'Direct pool' : 'Two-hop via demo USDT'}</strong><span className="subtle-pill">LOCAL ONLY</span></div>
+            <div className="route-path"><ArrowLeftRight size={16}/> {route.path.join(' → ')}</div>
+            <div className="route-result-metrics"><span>Example output <b>{displayNumber(route.estimatedOut, 6)} {to}</b></span><span>Min. received <b>{displayNumber(route.minOut, 6)} {to}</b></span></div>
+            <button className="btn btn-primary full-width" disabled={policy.paused || amountNumber > demo.balances[from]} onClick={() => onExecute(route)}>Execute local simulation <ArrowRight size={15}/></button>
+          </div>) : !info.error && <div className="empty-table"><ArrowLeftRight size={26}/><b>No routes available</b><span>Choose an amount and two different assets.</span></div>}
+        {destination === 'beldex-testnet' && <p className="muted smaller">Simulated USD value: {Number.isFinite(amountNumber) && amountNumber > 0 ? money(amountNumber * priceOf(from)) : '—'}. This interface never calls a bridge.</p>}
+      </section>
+    </div>
+  </div>
+}
+
+export function SecurityPage({ policy, onPause }: { policy: DemoPolicyState; onPause: () => void }) {
+  return <div className="stack">
+    <div className="section-header"><div><div className="eyebrow">MILESTONE 06 / PROTOCOL CONTROLS</div><h1>Safety centre</h1><p>Protective guardrails for HOXO's offline simulator. These controls do not secure real assets.</p></div><span className="subtle-pill">DEMO POLICY</span></div>
+    <div className="panel">
+      <div className="card-heading"><h3>Session-wide demo pause</h3><span className="subtle-pill">{policy.paused ? 'PAUSED' : 'ACTIVE · DEMO'}</span></div>
+      <div className="privacy-box"><ShieldCheck size={22}/><div><b>Reduce risk, even when paused</b><p>Pausing prevents new demo swaps, routed trades, leveraged positions, loans and collateral withdrawals. Position closes, repayments and collateral supply remain available. Reloading resets this session-only control.</p></div></div>
+      <button className="btn btn-outline" style={{ marginTop: 16 }} onClick={onPause}>{policy.paused ? 'Resume demo actions' : 'Pause new demo risk actions'}</button>
+    </div>
+    <div className="metrics-grid three">
+      <div className="metric-card"><div className="metric-top">Swap trade cap</div><strong>{money(POLICY.maxSwapUsd)}</strong><span className="metric-sub">Per browser-local action</span></div>
+      <div className="metric-card"><div className="metric-top">Perpetual leverage cap</div><strong>{POLICY.maxLeverage}×</strong><span className="metric-sub">{money(POLICY.maxPerpNotionalUsd)} demo notional cap</span></div>
+      <div className="metric-card"><div className="metric-top">New loan cap</div><strong>{money(POLICY.maxNewBorrowUsd)}</strong><span className="metric-sub">Plus 70% LTV checks</span></div>
+    </div>
+    <div className="panel"><h3>Production protection is not enabled</h3><p className="muted smaller">This frontend cannot enforce global kill switches or prove privacy, and it contains no settlement key, vault, market-maker wallet or authorised financial operator. A real launch requires authenticated service controls, independently audited contracts, incident-response procedures and externally verifiable settlement.</p><p className="muted smaller">Live execution flag: <strong>{LIVE_SETTLEMENT_ENABLED ? 'enabled' : 'disabled by code'}</strong></p></div>
+  </div>
+}
+
+export function LaunchPage() {
+  const state = productionReadiness()
+  return <div className="stack">
+    <div className="section-header"><div><div className="eyebrow">MILESTONE 07 / RELEASE READINESS</div><h1>Launch readiness</h1><p>Track what is in the functioning prototype and what still blocks mainnet financial products.</p></div><span className="subtle-pill">MAINNET BLOCKED</span></div>
+    <div className="metrics-grid three">
+      <div className="metric-card"><div className="metric-top">Prototype components</div><strong>{state.prototypeCount}</strong><span className="metric-sub">Implementation previews, not audits</span></div>
+      <div className="metric-card"><div className="metric-top">Production blockers</div><strong>{state.blockers.length}</strong><span className="metric-sub">Required before live DeFi</span></div>
+      <div className="metric-card"><div className="metric-top">Live execution</div><strong>OFF</strong><span className="metric-sub">Hard-disabled in code</span></div>
+    </div>
+    <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
+      <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
+        {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
+      </tbody></table></div>
+    </div>
+    <div className="panel"><h3>What can be deployed?</h3><p className="muted smaller">The static HOXO research application can be published with a prominent demo warning, security headers and no production transaction features. A deployed website is not an approved or audited exchange, bridge or lending protocol.</p><a className="btn btn-outline" href="https://github.com/mushee-io/Hoxo-MM/blob/main/docs/ROADMAP.md" target="_blank" rel="noreferrer">Review milestone requirements <ArrowRight size={15}/></a></div>
+  </div>
+}
