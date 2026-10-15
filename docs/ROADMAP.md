@@ -9,7 +9,9 @@ Updated: 15 October 2026
 - [x] Beldex wallet connection through `@bdxi/web3js`, user-approved native BDX TESTNET transfer flow, capped at 5 test BDX
 - [x] Actual wallet balance kept separate from fictitious demo balances; verify network/address before every testnet send, block mainnet sending
 - [x] Defensive parsing of browser-local demo activity, balances, positions and pools
-- [x] Testnet-only transfer UI, wallet-approval path, duplicate-timeout safety and transfer-validator tests
+- [x] Testnet-only transfer UI, wallet-approval path and single-send SDK tests, restart-persistent unknown-outcome lock and wallet reconciliation
+- [x] Wallet-approved testnet message signature and verification demonstration (not login)
+- [x] Fail-closed Privacy Token adapter interfaces and exact integer amount units (no unsupported RPC calls)
 - [ ] Funded **two-wallet** TESTNET transfer manually signed and receipt verified
 - [ ] Official documented Privacy Token mint/balance/transfer API integrated, then issuance and transfer verified on testnet
 - [ ] Settlement integration, real server infrastructure and audited chain adapters
