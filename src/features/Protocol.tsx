@@ -91,7 +91,11 @@ export function SecurityPage({ policy, poolFeesUsd, onPause }: { policy: DemoPol
   </div>
 }
 
-export function LaunchPage() {
+export function LaunchPage({ walletNetwork, walletHeight, walletTransfer }: {
+  walletNetwork: string | null
+  walletHeight: number | null
+  walletTransfer: string | null
+}) {
   const state = productionReadiness()
   return <div className="stack">
     <div className="section-header"><div><div className="eyebrow">MILESTONE 07 / RELEASE READINESS</div><h1>Launch readiness</h1><p>Track what is in the functioning prototype and what still blocks mainnet financial products.</p></div><span className="subtle-pill">MAINNET BLOCKED</span></div>
@@ -99,6 +103,16 @@ export function LaunchPage() {
       <div className="metric-card"><div className="metric-top">Prototype components</div><strong>{state.prototypeCount}</strong><span className="metric-sub">Implementation previews, not audits</span></div>
       <div className="metric-card"><div className="metric-top">Production blockers</div><strong>{state.blockers.length}</strong><span className="metric-sub">Required before live DeFi</span></div>
       <div className="metric-card"><div className="metric-top">DeFi settlement</div><strong>OFF</strong><span className="metric-sub">Only wallet-approved TESTNET native BDX sends can broadcast</span></div>
+    </div>
+    <div className="panel">
+      <div className="card-heading"><h3>Beldex testnet connection checks</h3><span className="subtle-pill">{walletNetwork === 'testnet' ? 'TESTNET WALLET CONNECTED' : 'NOT VERIFIED'}</span></div>
+      <div className="route-result-metrics">
+        <span>Active wallet network<b>{walletNetwork ?? 'No wallet connected'}</b></span>
+        <span>Wallet scan height<b>{walletHeight ?? 'Not available'}</b></span>
+        <span>Latest native BDX send<b>{walletTransfer ?? 'Not attempted in session'}</b></span>
+      </div>
+      <p className="muted smaller">Live wallet connection uses the official Beldex SDK. Wallet scan height and wallet-returned hashes are not independent proof that a particular transaction reached finality. Swap settlement, lending contracts and private-asset transfer remain unavailable.</p>
+      <p className="muted smaller">The release dashboard is operational on testnet as a readiness viewer; it does not deploy contracts or unlock exchange functionality.</p>
     </div>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
