@@ -1,57 +1,74 @@
-# HOXO milestone status
+# HOXO milestones 1–7: implementation status
 
-Updated: 14 October 2026
+Updated: 15 October 2026
 
-This repo distinguishes **implemented prototypes** from **live blockchain functions**. No fake trade, liquidation or lending action is marketed as an on-chain transaction.
+**Definition of status:** [x] means *implemented in the HOXO prototype repository*, not live, audited or mainnet deployed. Production requirements remain [ ].
 
-## Milestone 1 — Foundation
-- [x] React / TypeScript / Vite shell, responsive UI and navigation
-- [x] Beldex Extension Wallet connection via official-organisation SDK fork `@bdxi/web3js`
-- [x] Wallet-authorised BDX balance read and network display
-- [x] Read-only wallet state separated from fictitious simulator balances
-- [ ] Live Privacy Token issuance/transfer integration (requires reviewed token SDK and testnet assets)
-- [ ] Real backend, relayer infrastructure and on-chain integration tests
+## Milestone 1 — App foundation and Beldex wallet
+- [x] React 18, TypeScript, Vite and responsive navigation
+- [x] Read-only authorised BDX wallet connection through `@bdxi/web3js`
+- [x] Read-only wallet state kept separate from fictitious demo balances
+- [x] Defensive parsing of browser-local demo activity, balances, positions and pools
+- [ ] Verified privacy-token issuance and transfer on testnet
+- [ ] Settlement integration, real server infrastructure and audited chain adapters
 
 ## Milestone 2 — HOXO Swap
-- [x] Quote inputs, asset selectors, slippage and fees
-- [x] Deterministic constant-product quote simulator
-- [x] Mutable per-pair demonstration AMM reserves, replay-safe minimum-output checks, and balance accounting
-- [x] Validate restored browser ledger and migrate older local demo state
-- [x] Demo wallet and local activity ledger
-- [ ] Actual liquidity pool contracts, RFQ signing, atomic swap settlement, audit
+- [x] Simulated token quote, slippage and price-impact UX
+- [x] Mutable demo AMM pool reserves and minimum-output revalidation
+- [x] Explicit fictional balances, local activity and trade limits
+- [ ] Real verified Beldex on-chain liquidity, order authorisation and atomic settlement
+- [ ] Reorg recovery, replay/idempotence protection and independent audit
 
 ## Milestone 3 — HOXO Perps
-- [x] BTC, ETH and BDX demo markets, long/short, isolated margin, 1–20x leverage
-- [x] Position equity, PnL, liquidation-price calculations, stress-price slider
-- [x] Open/close simulator positions and history
-- [x] Restrict invalid position parameters and mark breached-margin positions as demo liquidations with zero payout
-- [ ] Real oracles, matching engine, escrow, enforceable settlement, liquidation keepers, audit
+- [x] Simulated long/short BTC, ETH and BDX, isolated margin and P&L
+- [x] Example liquidation threshold and payout handling on position close
+- [x] Browser-demo max notional and 10× policy gate
+- [ ] Real oracles, order matching, escrow, funding, mark prices, insurance fund
+- [ ] On-chain liquidation, production accounting and independent audit
 
 ## Milestone 4 — HOXO Lend
-- [x] Demo supply/withdraw/borrow/repay, wallet ledger, health factors
-- [x] Asset APYs (illustrative), 70% borrow LTV and 80% liquidation threshold
-- [x] Unit tests for collateral constraints
-- [x] Deterministic 30-day interest projection with collateral-health preview and invalid-state tests
-- [x] Manually apply 1- or 7-day example interest to a local-only lending ledger
-- [x] Allow supply and repayments for already undercollateralised accounts while restricting new borrowing and withdrawals
-- [ ] Production lending contract, interest indexing and enforceable settlement
-- [ ] Real lending pools, contract-level collateral enforcement, dynamic interest accrual and audit
+- [x] Local supply, borrow, repay and withdrawal simulation
+- [x] Example fixed APRs, collateral LTV and health factor
+- [x] 30-day projection and manual 1/7-day local interest accrual
+- [x] Risk-reducing actions allowed even when account is undercollateralised
+- [ ] Enforceable lending pool custody, interest indexes, oracle risk, liquidation and audit
 
-## Why staged?
-Beldex launched UTXO Privacy Tokens on testnet in October 2026, but its EVM sidechain was not live as of this milestone. Native private transfers do not imply executable AMM, perpetual or lending contracts. Real financial execution MUST remain disabled until verified settlement infrastructure is available.
+## Milestone 5 — Cross-chain liquidity & routing
+- [x] Offline comparison of local direct vs two-hop swap paths
+- [x] 30s route expiration and immutable multi-leg demonstration accounting
+- [x] No fake cross-chain execution, route quotes or wallet deposits for unsupported bridges
+- [x] Chain integration matrix with trust and privacy notices
+- [ ] Verify supported Beldex bridge contract addresses and integrate wallet-approved transfers
+- [ ] Live external liquidity, routing trust assumptions, audited custody/refunds and reconciled settlements
+
+## Milestone 6 — Security, protocol economics and audits
+- [x] Session-only demo pause with risk-reducing action exceptions
+- [x] Demonstration notional, leverage and borrowing caps
+- [x] Hard-disabled live execution and documented release gates
+- [x] Threat-model and incident-response documentation
+- [x] CI typecheck, unit tests and static build
+- [ ] Authenticated production pause, rate limiting, key custody and encrypted backup operations
+- [ ] Independent smart contract, privacy and economic audits
+- [ ] Fee revenue accounting and BDX buyback/burn **only if supported and approved** (not implemented)
+
+## Milestone 7 — Mainnet preparation and phased launch
+- [x] Launch-readiness screen showing explicit production blockers
+- [x] Vite/Vercel research-preview configuration, noindex and security headers
+- [x] Deployment, security and operations runbooks
+- [ ] Verified testnet transfers and audited financial contract deployments
+- [ ] End-to-end real-systems integration tests and bridge failure exercises
+- [ ] Operational on-call coverage, incident drills and third-party risk review
+- [ ] Relevant legal and regulatory assessment
+- [ ] **Actual Beldex mainnet swap, perpetual and lending service launch**
+
+## Why not claim seven live milestones?
+Beldex's UTXO Privacy Tokens were announced on testnet on 6 October 2026, while EVM-compatible sidechain execution was described as planned for 2027. Privacy tokens and wallet approval alone do not imply programmable smart contracts, audited cross-chain swap settlement or enforceable lending/perps liquidations.
+
+**HOXO has delivered an end-to-end testable research preview for workstreams M1–M7. Its financial protocol launch remains gated on missing infrastructure, audits and partner verifications.** Never deposit funds into a demonstration market.
 
 References:
 - https://beldex.io/blog/privacy-tokens-live-on-beldex-testnet
-- https://github.com/Beldex-Coin/bdx-web3js
-- https://beldex.io/blog/beldex-stealthex-ama-recap
+- https://www.beldex.io/blog/beldex-stealthex-ama-recap
+- https://www.beldex.io/grants
 
-## Developer commands
-```sh
-npm install
-npm run dev
-npm run typecheck
-npm test
-npm run build
-```
-
-No environment secrets are needed. Do not deposit assets into a demo trading screen.
+Developer commands: `npm install`, `npm run typecheck`, `npm test`, `npm run build`.
