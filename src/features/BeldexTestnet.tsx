@@ -17,7 +17,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
     try { validateTestnetSend(connection.network, recipient, amount, connection.unlockedAtomic) }
     catch (e) { validation = e instanceof Error ? e.message : 'Invalid testnet request' }
   } else validation = 'Connect and refresh a Beldex TESTNET wallet to read an available BDX balance'
-  const previousUnknown = wallet.transaction?.status === 'unknown'
+  const previousUnknown = Boolean(wallet.unresolvedLock) || wallet.transaction?.status === 'unknown'
   const canSend = testnet && !validation && acknowledged && !wallet.busySend && !previousUnknown
   return <div className="stack">
     <div className="section-header">
@@ -46,6 +46,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
       </section>
       <section className="panel">
         <div className="card-heading"><h3>Private BDX testnet transfer</h3><span className="subtle-pill">WALLET APPROVAL REQUIRED</span></div>
+        {wallet.unresolvedLock && <div className="wallet-error" style={{ display: 'block', marginBottom: 20 }}><b>Unresolved wallet operation — new sends locked</b><p>HOXO recorded an in-progress testnet send, possibly from a previous page session. Check the sending wallet's testnet history and receiving wallet, and confirm whether the payment occurred. Do not blindly send again.</p><label style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '14px 0' }}><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)}/> I have reconciled this operation directly in the wallet.</label><button className="btn btn-outline" disabled={!acknowledged || wallet.busySend} onClick={() => { wallet.clearReconciled(); setAcknowledged(false) }}>I verified the outcome — unlock new requests</button></div>}
         <div className="route-fields" style={{ gridTemplateColumns: '1fr' }}>
           <label className="route-field">Recipient's Beldex testnet address
             <input type="text" value={recipient} onChange={e => { setRecipient(e.target.value); setAcknowledged(false) }} placeholder="Paste a full Beldex wallet address" autoComplete="off" spellCheck={false}/>
