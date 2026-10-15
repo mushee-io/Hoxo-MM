@@ -98,13 +98,13 @@ export function LaunchPage() {
     <div className="metrics-grid three">
       <div className="metric-card"><div className="metric-top">Prototype components</div><strong>{state.prototypeCount}</strong><span className="metric-sub">Implementation previews, not audits</span></div>
       <div className="metric-card"><div className="metric-top">Production blockers</div><strong>{state.blockers.length}</strong><span className="metric-sub">Required before live DeFi</span></div>
-      <div className="metric-card"><div className="metric-top">Live execution</div><strong>OFF</strong><span className="metric-sub">Hard-disabled in code</span></div>
+      <div className="metric-card"><div className="metric-top">DeFi settlement</div><strong>OFF</strong><span className="metric-sub">Only wallet-approved TESTNET native BDX sends can broadcast</span></div>
     </div>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
         {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
       </tbody></table></div>
     </div>
-    <div className="panel"><h3>What can be deployed?</h3><p className="muted smaller">The static HOXO research application can be published with a prominent demo warning, security headers and no production transaction features. A deployed website is not an approved or audited exchange, bridge or lending protocol.</p><a className="btn btn-outline" href="https://github.com/mushee-io/Hoxo-MM/blob/main/docs/ROADMAP.md" target="_blank" rel="noreferrer">Review milestone requirements <ArrowRight size={15}/></a></div>
+    <div className="panel"><h3>What can be deployed?</h3><p className="muted smaller">The HOXO research application can be published with prominent warnings, security headers and no production DeFi transaction features. The Testnet tab can request native BDX transfers with wallet approval but no mainnet activity. A deployed website is not an approved or audited exchange, bridge or lending protocol.</p><a className="btn btn-outline" href="https://github.com/mushee-io/Hoxo-MM/blob/main/docs/ROADMAP.md" target="_blank" rel="noreferrer">Review milestone requirements <ArrowRight size={15}/></a></div>
   </div>
 }

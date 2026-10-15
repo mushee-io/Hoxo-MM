@@ -1,10 +1,10 @@
 # HOXO Threat Model — Milestone 6
 
 ## System boundaries
-1. **Beldex wallet:** the user authorises read-only connection and unlocked BDX balance access. HOXO receives no seed, view key or spend key.
+1. **Beldex wallet:** the user authorises balance access; the TESTNET page may additionally request a real native test BDX send that the user must approve inside the extension. All mainnet sends are blocked. HOXO receives no seed, view key or spend key.
 2. **Simulation state:** browser-local balances, liquidity, positions, sample prices and APYs. All values are synthetic and editable by the user/browser. They are **not trusted accounting**.
 3. **Route explorer:** quote math on the same fictional local AMM pools. External-chain routes are disabled.
-4. **Production systems:** no custodial vault, backend exchange, price oracle, bridge relayer, signing service or enforceable settlement is currently deployed.
+4. **Production systems:** no custodial vault, backend exchange, price oracle, bridge relayer, signing service or enforceable DeFi settlement is deployed. TESTNET BDX native transfer is a wallet feature, not a DEX settlement operation.
 
 ## Attack surfaces and controls
 | Threat | Current mitigation | Remaining risk |
@@ -16,7 +16,7 @@
 | Margin breach | Conservative zero-payout simulated liquidation on breach | No market pricing, liquidation auction or bad-debt resolution |
 | Bridge failure or fraud | No bridge transaction capabilities present | Bridging cannot launch without contracts, monitoring, audits |
 | Price-oracle manipulation | Fixed labelled example prices, no user-facing live execution | Real oracle infrastructure absent |
-| Sensitive wallet information | Never ask for seed or private keys; read authorised wallet balance only | Browser extensions and RPC metadata have separate threat boundaries |
+| Sensitive wallet information | Never ask for seed or private keys; wallet-approved native testnet BDX send after account/network checks | Browser extensions, recipient typed into browser and RPC/network metadata still have separate threat boundaries |
 | Compromised release | Live execution hard-disabled; noindex header on preview | Production keys, upgrade policy, governance all unimplemented |
 
 ## Kill switch semantics

@@ -8,7 +8,7 @@ export type ReadinessGate = {
   requirement: string
 }
 export const READINESS_GATES: ReadonlyArray<ReadinessGate> = [
-  { id: 'wallet', area: 'Integration', label: 'Beldex wallet connection', state: 'prototype', requirement: 'Read-only wallet connection is integrated; confirm production SDK support and testnet flows' },
+  { id: 'wallet', area: 'Integration', label: 'Beldex wallet and TESTNET BDX', state: 'prototype', requirement: 'Read-only wallet and native wallet-approved TESTNET send are coded; manual funded two-wallet E2E and Privacy Token API remain outstanding' },
   { id: 'routing', area: 'Integration', label: 'Swap and routing', state: 'prototype', requirement: 'Only browser-local swaps and simulated multi-hop quotes exist' },
   { id: 'perps', area: 'Settlement', label: 'Perpetual risk and execution', state: 'blocked', requirement: 'On-chain settlement, oracle validation, escrow and liquidation keepers must be developed and audited' },
   { id: 'lending', area: 'Settlement', label: 'Lending markets', state: 'blocked', requirement: 'Enforceable contracts, liquidity, interest indexes and collateral liquidation are missing' },
