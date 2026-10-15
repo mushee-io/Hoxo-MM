@@ -227,6 +227,12 @@ export function useBeldexWallet() {
       const result = await wallet.signMessage(message)
       if (result.address !== address) throw new Error('Wallet signature account does not match')
       const verified = await wallet.verifyMessage({ message, signature: result.signature, address })
+      // Prevent a slow signature approval from outliving the network/account
+      // that originally issued it.
+      const [currentNetwork, currentAddress] = await Promise.all([wallet.getNetwork(), wallet.getAddress()])
+      if (currentNetwork.nettype !== 'testnet' || currentAddress !== address || sdk.current !== wallet) {
+        throw new Error('Beldex wallet changed during proposal signing')
+      }
       const signed: SignedTestnetIntent = {
         kind: draft.kind, message, signature: result.signature, verified: true,
         walletAddress: address, issuedAt,
