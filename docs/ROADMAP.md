@@ -6,10 +6,12 @@ Updated: 15 October 2026
 
 ## Milestone 1 — App foundation and Beldex wallet
 - [x] React 18, TypeScript, Vite and responsive navigation
-- [x] Read-only authorised BDX wallet connection through `@bdxi/web3js`
-- [x] Read-only wallet state kept separate from fictitious demo balances
+- [x] Beldex wallet connection through `@bdxi/web3js`, user-approved native BDX TESTNET transfer flow, capped at 5 test BDX
+- [x] Actual wallet balance kept separate from fictitious demo balances; verify network/address before every testnet send, block mainnet sending
 - [x] Defensive parsing of browser-local demo activity, balances, positions and pools
-- [ ] Verified privacy-token issuance and transfer on testnet
+- [x] Testnet-only transfer UI, wallet-approval path, duplicate-timeout safety and transfer-validator tests
+- [ ] Funded **two-wallet** TESTNET transfer manually signed and receipt verified
+- [ ] Official documented Privacy Token mint/balance/transfer API integrated, then issuance and transfer verified on testnet
 - [ ] Settlement integration, real server infrastructure and audited chain adapters
 
 ## Milestone 2 — HOXO Swap
@@ -56,7 +58,7 @@ Updated: 15 October 2026
 - [x] Launch-readiness screen showing explicit production blockers
 - [x] Vite/Vercel research-preview configuration, noindex and security headers
 - [x] Deployment, security and operations runbooks
-- [ ] Verified testnet transfers and audited financial contract deployments
+- [ ] Funded two-wallet testnet BDX transfer verified; Privacy Token transfer integration; audited financial contract deployments
 - [ ] End-to-end real-systems integration tests and bridge failure exercises
 - [ ] Operational on-call coverage, incident drills and third-party risk review
 - [ ] Relevant legal and regulatory assessment
