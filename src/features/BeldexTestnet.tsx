@@ -67,7 +67,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
         {wallet.transaction && <div className="route-result" style={{ marginTop: 16 }}>
           <div className="route-result-title"><strong>Wallet operation: {wallet.transaction.status}</strong>{wallet.transaction.status === 'broadcast' ? <CheckCircle2 size={18}/> : <CircleAlert size={18}/>}</div>
           <p className="muted smaller">{wallet.transaction.message}</p>
-          {wallet.transaction.txHash && <p className="smaller" style={{ overflowWrap: 'anywhere' }}>Wallet transaction hash: <code>{wallet.transaction.txHash}</code></p>}
+          {wallet.transaction.txHash && <p className="smaller" style={{ overflowWrap: 'anywhere' }}>Wallet transaction hash: <code>{wallet.transaction.txHash}</code> <a href={"https://testnet.beldex.dev/tx/" + encodeURIComponent(wallet.transaction.txHash)} target="_blank" rel="noreferrer">Check on Beldex testnet explorer <ExternalLink size={13}/></a></p>}
           {wallet.transaction.fee && <p className="muted smaller">Wallet-reported network fee: {wallet.transaction.fee} test BDX</p>}
           {wallet.transaction.operationId && <button className="mini-btn" onClick={() => void wallet.refreshTransferStatus()}><RefreshCw size={13}/> Check wallet operation status</button>}
           {wallet.transaction.status === 'unknown' && <p className="negative-text smaller">Do not send the same payment again without resolving it in the Beldex wallet. A local timeout does not prove failure.</p>}
