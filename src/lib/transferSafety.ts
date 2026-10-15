@@ -17,7 +17,7 @@ export function readTransferLock(storage: Pick<Storage, 'getItem'>): TransferLoc
     if (data.status !== 'pending' || !Number.isSafeInteger(data.createdAt) || typeof data.idempotencyKey !== 'string' || !KEY_RE.test(data.idempotencyKey)) {
       return { status: 'pending', createdAt: 0, idempotencyKey: '' }
     }
-    return { status: 'pending', createdAt: data.createdAt, idempotencyKey: data.idempotencyKey }
+    return { status: 'pending', createdAt: data.createdAt as number, idempotencyKey: data.idempotencyKey }
   } catch {
     // Corrupted state may represent an unresolved wallet approval. Fail closed.
     return { status: 'pending', createdAt: 0, idempotencyKey: '' }
