@@ -37,7 +37,7 @@ npm run build
 
 ## App navigation
 
-- **Testnet:** real wallet-authorised native **test BDX** transfer (5 BDX cap), network verification, wallet status; no mainnet sends
+- **Testnet:** real wallet-authorised native **test BDX** transfer (5 BDX cap), network verification, wallet-approved signature proof, persistent uncertain-payment safety lock and wallet reconciliation; no mainnet sends
 - **Overview:** product links and simulated portfolio KPIs
 - **Swap:** token exchange simulation with mutable local reserves
 - **Perps:** BTC/ETH/BDX reference market derivatives simulation
@@ -53,7 +53,10 @@ npm run build
 - `src/features/Protocol.tsx` — M5–M7 route, security and launch screens
 - `src/hooks/useBeldexWallet.ts` — Beldex wallet authorised connection, balances and native testnet-only BDX transfer
 - `src/features/BeldexTestnet.tsx` and `src/lib/testnet.ts` — explicit real test BDX transfer UI, network/amount/fee-reserve guards
-- `docs/BELDEX_TESTNET.md` — funded two-wallet test plan and current Privacy Token integration blockers
+- `docs/BELDEX_TESTNET.md` — funded two-wallet test plan, transfer recovery guidance and current Privacy Token integration blockers
+- `src/lib/nativeTransfer.ts`, `src/lib/transferSafety.ts` — single-send SDK boundary and privacy-minimising unknown-outcome guard
+- `src/lib/testnetProof.ts` — local testnet signature proof with independent wallet verification; **not** authentication
+- `src/lib/privacyAssetAdapter.ts` — hard-disabled, exact-unit Privacy Token integration contract awaiting documented SDK methods
 - `src/lib/routes.ts` — M5 offline routing comparisons, TTL, max value, immutable local execution
 - `src/lib/security.ts` — M6 demonstration controls and hard-disabled live settlement
 - `src/lib/economics.ts` — M6 transparent, hypothetical LP / reserve / BDX buyback fee allocation
