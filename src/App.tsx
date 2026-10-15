@@ -292,7 +292,7 @@ export default function App() {
     try {
       assertDemoOperation('swap', policy, amount * priceOf(from))
       const trade = executeDemoSwap(demo.balances, demo.pools, from, to, amount, minOut)
-      setDemo(pushActivity({ ...demo, balances: trade.balances, pools: trade.pools }, 'Simulated pool swap', from + ' → ' + to, displayNumber(trade.quote.amountOut, 5) + ' ' + to))
+      setDemo(pushActivity({ ...demo, balances: trade.balances, pools: trade.pools, poolFeesUsd: demo.poolFeesUsd + trade.quote.feeUsd }, 'Simulated pool swap', from + ' → ' + to, displayNumber(trade.quote.amountOut, 5) + ' ' + to))
       notify('Demo swap executed; the simulated pool reserves have updated. No blockchain transaction.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Demo trade rejected', true) }
   }
@@ -334,7 +334,7 @@ export default function App() {
     try {
       assertDemoOperation('route', policy, route.amountIn * priceOf(route.path[0]))
       const result = executeDemoRoute(route, demo.balances, demo.pools)
-      setDemo(pushActivity({ ...demo, balances: result.balances, pools: result.pools }, 'Demo liquidity route', route.path.join(' → '), displayNumber(result.amountOut, 5) + ' ' + route.path[route.path.length - 1]))
+      setDemo(pushActivity({ ...demo, balances: result.balances, pools: result.pools, poolFeesUsd: demo.poolFeesUsd + result.poolFeesUsd }, 'Demo liquidity route', route.path.join(' → '), displayNumber(result.amountOut, 5) + ' ' + route.path[route.path.length - 1]))
       notify('Local demonstration route completed. No blockchain transaction or bridge transfer.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Demo routing refused', true) }
   }
@@ -371,7 +371,7 @@ export default function App() {
         {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
         {page === 'Routes' && <RoutesPage demo={demo} policy={policy} onExecute={handleRoute}/>}
         {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset}/>}
-        {page === 'Security' && <SecurityPage policy={policy} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
+        {page === 'Security' && <SecurityPage policy={policy} poolFeesUsd={demo.poolFeesUsd} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
         {page === 'Launch' && <LaunchPage/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
