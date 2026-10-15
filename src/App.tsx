@@ -15,6 +15,7 @@ import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/d
 import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest'
 import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
+import { TestnetIntentPanel } from './features/TestnetIntents'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
 import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
@@ -110,7 +111,7 @@ function Overview({ demo, openPage }: { demo: DemoState; openPage: (page: Page) 
   </div>
 }
 
-function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Asset, quantity: number, output: number) => void }) {
+function Swap({ demo, onSwap, wallet }: { demo: DemoState; wallet: ReturnType<typeof useBeldexWallet>; onSwap: (from: Asset, to: Asset, quantity: number, output: number) => void }) {
   const [from, setFrom] = useState<Asset>('BDX')
   const [to, setTo] = useState<Asset>('USDT')
   const [amount, setAmount] = useState('1000')
@@ -158,6 +159,7 @@ function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Ass
         <div className="feature-row"><EyeOff size={20}/><span><b>User-directed execution</b><small>Real settlements require audited infrastructure</small></span></div>
       </section>
     </div>
+    <TestnetIntentPanel kind="swap" wallet={wallet}/>
   </div>
 }
 
@@ -218,7 +220,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
   </div>
 }
 
-function Lend({ demo, onAction, onAccrue }: { demo: DemoState; onAction: (action: LendingAction, asset: Asset, amount: number) => void; onAccrue: (days: number) => void }) {
+function Lend({ demo, onAction, onAccrue, wallet }: { demo: DemoState; wallet: ReturnType<typeof useBeldexWallet>; onAction: (action: LendingAction, asset: Asset, amount: number) => void; onAccrue: (days: number) => void }) {
   const [action, setAction] = useState<LendingAction>('supply')
   const [asset, setAsset] = useState<Asset>('BDX')
   const [amount, setAmount] = useState('1000')
@@ -261,14 +263,40 @@ function Lend({ demo, onAction, onAccrue }: { demo: DemoState; onAction: (action
     </div>
     <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Fixed example APRs. Projected values are not credited automatically, and they do not represent real yield. Manually advance the demonstration clock below to apply simulated interest to the local ledger.</p><div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(1)}>Advance 1 demo day</button><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(7)}>Advance 7 demo days</button></div><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
+    <TestnetIntentPanel kind="lend" wallet={wallet}/>
   </div>
 }
 
-function Portfolio({ demo, onReset }: { demo: DemoState; onReset: () => void }) {
+function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => void; wallet: ReturnType<typeof useBeldexWallet> }) {
   const health = lendingHealth(demo.lending)
   const portfolioValue = totalValue(demo.balances) + health.collateralUsd - health.debtUsd + demo.positions.reduce((sum, p) => sum + Math.max(0, positionMetrics(p, p.entry).equity), 0)
   return <div className="stack">
     <SectionHead eyebrow="YOUR HOXO EXPERIENCE" title="Portfolio" description="A transparent view of your local demo assets and activity." accessory={<button className="btn btn-outline" onClick={onReset}><RotateCcw size={15}/> Reset demo</button>}/>
+    <section className="panel">
+      <CardTitle right={<span className="subtle-pill">{wallet.connection?.network === 'testnet' ? 'BELDEX TESTNET' : 'WALLET SNAPSHOT'}</span>}>Real Beldex wallet portfolio</CardTitle>
+      {!wallet.connection ? <>
+        <p className="muted smaller">Connect the Beldex extension to view a real wallet-authorised BDX balance. The fictional portfolio below is separate.</p>
+        <button className="btn btn-outline" disabled={wallet.busy} onClick={() => void wallet.connect()}><Wallet size={15}/> Connect Beldex wallet</button>
+      </> : <>
+        <div className="mini-metrics">
+          <div><span>Wallet total (BDX)</span><b>{wallet.connection.total}</b></div>
+          <div><span>Unlocked (BDX)</span><b>{wallet.connection.unlocked}</b></div>
+          <div><span>Reported scan height</span><b>{wallet.connection.height ?? 'Unavailable'}</b></div>
+        </div>
+        <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Network: {wallet.connection.network} · Wallet address: {wallet.connection.address}</p>
+        {wallet.connection.approximate && <p className="negative-text smaller">Balance is approximate until the wallet finishes syncing.</p>}
+        <button className="btn btn-outline" onClick={() => void wallet.refresh()}><RefreshCw size={15}/> Refresh real wallet balance</button>
+      </>}
+      <p className="muted smaller">Only native BDX is available through the published wallet SDK. The BTC, ETH and USDT demo balances below are not holdings in your wallet.</p>
+      {wallet.transaction && <div className="route-result">
+        <div className="route-result-title"><b>Latest wallet send: {wallet.transaction.status}</b><span className="subtle-pill">BDX TESTNET</span></div>
+        {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash}</p>}
+        <p className="muted smaller">{wallet.transaction.message || 'Check your extension for chain confirmation'}</p>
+      </div>}
+      {wallet.signedIntents.length > 0 && <div className="route-result"><b>Verified wallet-signed proposals (not transactions)</b>
+        {wallet.signedIntents.map(intent => <p key={intent.message} className="muted smaller">{intent.kind.toUpperCase()} · Wallet signature verified · No assets exchanged or borrowed</p>)}
+      </div>}
+    </section>
     <div className="portfolio-hero"><div><div className="eyebrow">TOTAL DEMO NET WORTH</div><div className="portfolio-total">{money(portfolioValue)}</div><span className="muted">Not connected to any blockchain balances</span></div><div className="portfolio-decoration"><ShieldCheck size={72}/></div></div>
     <div className="overview-columns">
       <div className="panel"><CardTitle right={<span className="subtle-pill">SIMULATED</span>}>Asset balances</CardTitle><div className="table-scroll"><table className="data-table"><thead><tr><th>Token</th><th>Balance</th><th>Demo value</th></tr></thead><tbody>{assetSymbols.map(a => <tr key={a}><td><span className="asset-cell"><Coin symbol={a}/><span><b>{a}</b><small>{ASSETS[a].name}</small></span></span></td><td>{displayNumber(demo.balances[a], 6)}</td><td>{money(demo.balances[a] * priceOf(a))}</td></tr>)}</tbody></table></div></div>
@@ -370,13 +398,13 @@ export default function App() {
         {wallet.connection && <div className="connected-readout"><Check size={15}/><span>Connected Beldex wallet</span><span className="wallet-address">{wallet.connection.address}</span><button title="Copy wallet address" aria-label="Copy wallet address" onClick={() => { navigator.clipboard.writeText(wallet.connection!.address).then(() => notify('Wallet address copied.')).catch(() => notify('Could not copy address.', true)) }}><Copy size={13}/></button><span className="live-balance">Unlocked: {wallet.connection.unlocked} BDX{wallet.connection.approximate ? ' (approx.)' : ''} · {wallet.connection.network}</span></div>}
         {page === 'Overview' && <Overview demo={demo} openPage={go}/>}
         {page === 'Testnet' && <BeldexTestnetPage wallet={wallet}/>}
-        {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap}/>}
+        {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap} wallet={wallet}/>}
         {page === 'Perps' && <Perps demo={demo} shock={shock} onShock={setShock} onOpen={handleOpen} onClose={handleClose}/>}
-        {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
+        {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue} wallet={wallet}/>}
         {page === 'Routes' && <RoutesPage demo={demo} policy={policy} onExecute={handleRoute}/>}
-        {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset}/>}
+        {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset} wallet={wallet}/>}
         {page === 'Security' && <SecurityPage policy={policy} poolFeesUsd={demo.poolFeesUsd} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
-        {page === 'Launch' && <LaunchPage/>}
+        {page === 'Launch' && <LaunchPage walletNetwork={wallet.connection?.network ?? null} walletHeight={wallet.connection?.height ?? null} walletTransfer={wallet.transaction?.status ?? null}/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
     </div>
