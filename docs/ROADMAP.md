@@ -15,6 +15,8 @@ This repo distinguishes **implemented prototypes** from **live blockchain functi
 ## Milestone 2 — HOXO Swap
 - [x] Quote inputs, asset selectors, slippage and fees
 - [x] Deterministic constant-product quote simulator
+- [x] Mutable per-pair demonstration AMM reserves, replay-safe minimum-output checks, and balance accounting
+- [x] Validate restored browser ledger and migrate older local demo state
 - [x] Demo wallet and local activity ledger
 - [ ] Actual liquidity pool contracts, RFQ signing, atomic swap settlement, audit
 
@@ -22,6 +24,7 @@ This repo distinguishes **implemented prototypes** from **live blockchain functi
 - [x] BTC, ETH and BDX demo markets, long/short, isolated margin, 1–20x leverage
 - [x] Position equity, PnL, liquidation-price calculations, stress-price slider
 - [x] Open/close simulator positions and history
+- [x] Restrict invalid position parameters and mark breached-margin positions as demo liquidations with zero payout
 - [ ] Real oracles, matching engine, escrow, enforceable settlement, liquidation keepers, audit
 
 ## Milestone 4 — HOXO Lend
@@ -29,7 +32,9 @@ This repo distinguishes **implemented prototypes** from **live blockchain functi
 - [x] Asset APYs (illustrative), 70% borrow LTV and 80% liquidation threshold
 - [x] Unit tests for collateral constraints
 - [x] Deterministic 30-day interest projection with collateral-health preview and invalid-state tests
-- [ ] Persist and reconcile accrued interest with a real lending ledger (projection is read-only)
+- [x] Manually apply 1- or 7-day example interest to a local-only lending ledger
+- [x] Allow supply and repayments for already undercollateralised accounts while restricting new borrowing and withdrawals
+- [ ] Production lending contract, interest indexing and enforceable settlement
 - [ ] Real lending pools, contract-level collateral enforcement, dynamic interest accrual and audit
 
 ## Why staged?
