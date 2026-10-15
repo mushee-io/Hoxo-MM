@@ -39,12 +39,12 @@ npm run build
 
 - **Testnet:** real wallet-authorised native **test BDX** transfer (5 BDX cap), network verification, wallet-approved signature proof, persistent uncertain-payment safety lock and wallet reconciliation; no mainnet sends
 - **Overview:** product links and simulated portfolio KPIs
-- **Swap:** token exchange simulation with mutable local reserves
+- **Swap:** token exchange simulation, wallet-signed non-executable intents, plus live public Beldex testnet Privacy Token discovery by token ID
 - **Perps:** BTC/ETH/BDX reference market derivatives simulation
-- **Lend:** simulated collateral and borrowing ledger, 1/7-day manual accrual
+- **Lend:** simulated collateral and borrowing ledger, 1/7-day manual accrual, signed lending proposal and public Privacy Token discovery
 - **Routes:** compare direct and two-hop quote paths; external chain destinations show unavailable
 - **Security:** browser-session pause and example exposure limits
-- **Launch:** live wallet network and scan-height readout alongside explicit blocking gates before production use
+- **Launch:** live wallet network, public testnet Privacy Token catalogue, wallet-side registration instructions and explicit blockers
 - **Portfolio:** live wallet-authorised BDX total/unlocked balances and network height **separated** from synthetic tokens and demo positions
 
 ## Repository map
@@ -55,6 +55,9 @@ npm run build
 - `src/features/BeldexTestnet.tsx` and `src/lib/testnet.ts` — explicit real test BDX transfer UI, network/amount/fee-reserve guards
 - `src/features/TestnetIntents.tsx` and `src/lib/testnetIntents.ts` — wallet-signed, verified **off-chain** testnet Swap/Lend proposals (no actual settlement)
 - `docs/TESTNET_EXECUTION_MATRIX.md` — what is native chain activity, wallet-signed only, and purely demo
+- `api/testnet-tokens.ts`, `api/testnet-token.ts` — bounded public testnet token metadata lookups; no wallet keys or personal balances
+- `src/features/TestnetAssets.tsx` — public testnet token listing / token ID lookup in Swap, Lend, Portfolio and Launch
+- `docs/TESTNET_PUBLIC_ASSETS.md` — official wallet token registration guide and verification checklist
 - `docs/BELDEX_TESTNET.md` — funded two-wallet test plan, transfer recovery guidance and current Privacy Token integration blockers
 - `src/lib/nativeTransfer.ts`, `src/lib/transferSafety.ts` — single-send SDK boundary and privacy-minimising unknown-outcome guard
 - `src/lib/testnetProof.ts` — local testnet signature proof with independent wallet verification; **not** authentication
