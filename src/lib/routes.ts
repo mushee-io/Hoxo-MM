@@ -81,7 +81,7 @@ export function executeDemoRoute(
   balances: WalletBalances,
   pools: PoolBook,
   now = Date.now(),
-): { balances: WalletBalances; pools: PoolBook; amountOut: number } {
+): { balances: WalletBalances; pools: PoolBook; amountOut: number; poolFeesUsd: number } {
   assertChain(route.source); assertChain(route.destination)
   if (route.execution !== 'demo-only' || route.source !== 'beldex-testnet' || route.destination !== 'beldex-testnet') {
     throw new Error('Cross-chain execution is not available')
@@ -98,12 +98,14 @@ export function executeDemoRoute(
   let currentBalances = balances
   let currentPools = pools
   let amount = route.amountIn
+  let poolFeesUsd = 0
   for (let i = 1; i < route.path.length; i++) {
     const last = i === route.path.length - 1
     const trade = executeDemoSwap(currentBalances, currentPools, route.path[i - 1], route.path[i], amount, last ? route.minOut : Number.MIN_VALUE)
     currentBalances = trade.balances
     currentPools = trade.pools
     amount = trade.quote.amountOut
+    poolFeesUsd += trade.quote.feeUsd
   }
-  return { balances: currentBalances, pools: currentPools, amountOut: amount }
+  return { balances: currentBalances, pools: currentPools, amountOut: amount, poolFeesUsd }
 }
