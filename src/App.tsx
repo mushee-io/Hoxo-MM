@@ -7,6 +7,7 @@ import {
   TrendingUp, Wallet, X, Zap
 } from 'lucide-react'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
+import Landing from './Landing'
 import { ASSETS, assetSymbols, displayNumber, money, priceOf, type Asset } from './lib/markets'
 import { executeDemoSwap, quoteSwap, SWAP_FEE_BPS } from './lib/swap'
 import { MAINTENANCE_MARGIN_RATE, openPosition, positionMetrics, settleDemoPosition, type PerpMarket, type Side, type Position } from './lib/perps'
@@ -33,6 +34,17 @@ const nav = [
   { name: 'Security' as const, icon: LockKeyhole },
   { name: 'Launch' as const, icon: Zap },
 ]
+
+// Root URL is the public homepage; /app and /app/<product> open the existing terminal.
+function pageFromPath(pathname: string): Page | null {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  if (path === '/app') return 'Overview'
+  if (path.startsWith('/app/')) {
+    const slug = path.slice('/app/'.length).toLowerCase()
+    return nav.find(item => item.name.toLowerCase() === slug)?.name ?? 'Overview'
+  }
+  return null
+}
 
 const iconSymbol: Record<Asset, string> = { BDX: 'B', USDT: '₮', BTC: '₿', ETH: 'Ξ' }
 function Coin({ symbol, size = 'md' }: { symbol: Asset; size?: 'sm' | 'md' | 'lg' }) {
@@ -310,7 +322,8 @@ function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => 
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>('Overview')
+  const [page, setPage] = useState<Page>(() => pageFromPath(window.location.pathname) ?? 'Overview')
+  const [isLanding, setIsLanding] = useState(() => pageFromPath(window.location.pathname) === null)
   const [mobileNav, setMobileNav] = useState(false)
   const [demo, setDemo] = useState<DemoState>(loadDemo)
   const [shock, setShock] = useState(0)
@@ -318,6 +331,16 @@ export default function App() {
   const [notice, setNotice] = useState<Notice | null>(null)
   const wallet = useBeldexWallet()
   useEffect(() => saveDemo(demo), [demo])
+  useEffect(() => {
+    const onHistoryChange = () => {
+      const destination = pageFromPath(window.location.pathname)
+      setIsLanding(destination === null)
+      if (destination) setPage(destination)
+      setMobileNav(false)
+    }
+    window.addEventListener('popstate', onHistoryChange)
+    return () => window.removeEventListener('popstate', onHistoryChange)
+  }, [])
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(null), 4500); return () => clearTimeout(timer) }, [notice])
   function notify(message: string, error = false) { setNotice({ message, error }) }
   function pushActivity(data: DemoState, label: string, detail: string, amount?: string): DemoState {
@@ -374,7 +397,22 @@ export default function App() {
     } catch (err) { notify(err instanceof Error ? err.message : 'Demo routing refused', true) }
   }
   function reset() { setDemo(initialState()); setShock(0); notify('Simulation reset to default demo balances.') }
-  function go(next: Page) { setPage(next); setMobileNav(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  function go(next: Page) {
+    setIsLanding(false)
+    setPage(next)
+    setMobileNav(false)
+    const route = next === 'Overview' ? '/app' : '/app/' + next.toLowerCase()
+    if (window.location.pathname !== route) window.history.pushState({ page: next }, '', route)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  function openHome() {
+    setIsLanding(true)
+    setMobileNav(false)
+    if (window.location.pathname !== '/') window.history.pushState({ page: null }, '', '/')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  if (isLanding) return <Landing onEnter={(destination) => go(destination ?? 'Overview')}/>
 
   return <div className="app-shell">
     {mobileNav && <button aria-label="Close navigation" className="mobile-scrim" onClick={() => setMobileNav(false)}/>}
@@ -390,7 +428,7 @@ export default function App() {
     </aside>
     <div className="main-area">
       <header className="topbar">
-        <div className="topbar-left"><button className="menu-toggle" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={21}/></button><div className="breadcrumb">Workspace <ChevronRight size={13}/> <b>{page}</b></div></div>
+        <div className="topbar-left"><button className="menu-toggle" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={21}/></button><div className="breadcrumb"><button type="button" className="breadcrumb-home" onClick={openHome}>Home</button><ChevronRight size={13}/> Workspace <ChevronRight size={13}/> <b>{page}</b></div></div>
         <div className="topbar-right"><span className="environment-badge"><span className="green-dot"/> DEMO ENVIRONMENT</span><span className="header-separator"/>
           {wallet.connection ? <div className="connected-group"><button className="wallet-connected" title="Refresh authorised wallet balance" onClick={wallet.refresh}><Coin symbol="BDX" size="sm"/><span>{wallet.connection.address.slice(0, 6)}…{wallet.connection.address.slice(-5)}</span><RefreshCw size={13}/></button><button className="icon-button" title="Disconnect wallet" onClick={wallet.disconnect}><X size={17}/></button></div> :
           <button className="btn btn-connect" disabled={wallet.busy} onClick={wallet.connect}><Wallet size={17}/>{wallet.busy ? 'Connecting…' : 'Connect Beldex'}</button>}
