@@ -1,4 +1,4 @@
-import { type Asset, priceOf, validAmount } from './markets'
+import { assetSymbols, type Asset, priceOf, validAmount } from './markets'
 export type WalletBalances = Record<Asset, number>
 export type LendingBook = { supplied: Partial<Record<Asset, number>>; borrowed: Partial<Record<Asset, number>> }
 export const COLLATERAL_FACTOR = 0.7
@@ -21,6 +21,9 @@ export function lendingHealth(book: LendingBook) {
 export type LendingAction = 'supply' | 'withdraw' | 'borrow' | 'repay'
 export function applyLendingAction(book: LendingBook, balances: WalletBalances, action: LendingAction, asset: Asset, amount: number): { book: LendingBook; balances: WalletBalances } {
   if (!validAmount(amount)) throw new Error('Enter a positive amount')
+  if (!assetSymbols.includes(asset)) throw new Error('Unsupported asset')
+  if (!Object.values(balances).every(n => Number.isFinite(n) && n >= 0)) throw new Error('Invalid demo wallet ledger')
+  if (![...Object.values(book.supplied), ...Object.values(book.borrowed)].every(n => Number.isFinite(n) && n >= 0)) throw new Error('Invalid lending ledger')
   const supplied = { ...book.supplied }, borrowed = { ...book.borrowed }
   const wallet = { ...balances }
   const available = wallet[asset]
@@ -41,7 +44,8 @@ export function applyLendingAction(book: LendingBook, balances: WalletBalances, 
   }
   const nextBook = { supplied, borrowed }
   const health = lendingHealth(nextBook)
-  if (health.debtUsd > health.collateralUsd * COLLATERAL_FACTOR + 1e-6) {
+  // Risk-reducing supply and repayment must remain available when debt exceeds LTV.
+  if ((action === 'borrow' || action === 'withdraw') && health.debtUsd > health.collateralUsd * COLLATERAL_FACTOR + 1e-6) {
     throw new Error('Collateral requirement would be exceeded (70% maximum LTV)')
   }
   return { book: nextBook, balances: wallet }
