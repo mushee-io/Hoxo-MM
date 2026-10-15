@@ -4,11 +4,13 @@ import { isTestnet } from '../lib/testnet'
 import { executeOneApprovedTestnetSend } from '../lib/nativeTransfer'
 import { clearTransferLock, readTransferLock, shouldPreserveLockAfterError, type TransferLock } from '../lib/transferSafety'
 import { buildTestnetWalletProof, assertProofResponse, type VerifiedLocalProof } from '../lib/testnetProof'
+import { buildTestnetIntent, verifyIntentAssociation, type IntentDraft, type SignedTestnetIntent } from '../lib/testnetIntents'
 
 export type Connection = {
   address: string
   network: string
   unlocked: string
+  total: string
   unlockedAtomic: bigint | null
   approximate: boolean
   height: number | null
@@ -34,6 +36,8 @@ export function useBeldexWallet() {
   const [unresolvedLock, setUnresolvedLock] = useState<TransferLock | null>(() => readTransferLock(localStorage))
   const [localProof, setLocalProof] = useState<VerifiedLocalProof | null>(null)
   const [busyProof, setBusyProof] = useState(false)
+  const [busyIntent, setBusyIntent] = useState(false)
+  const [signedIntents, setSignedIntents] = useState<SignedTestnetIntent[]>([])
   const sdkListeners = useRef<(() => void) | null>(null)
   const removeListeners = () => { sdkListeners.current?.(); sdkListeners.current = null }
 
@@ -42,6 +46,7 @@ export function useBeldexWallet() {
     removeListeners()
     setConnection(null)
     setLocalProof(null)
+    setSignedIntents([])
     // Keep pending outcome information; it may have been broadcast.
     setTransaction(current => current?.status === 'unknown' ? current : null)
     setError('Wallet account or network changed. Reconnect and recheck any previous transfers.')
@@ -66,17 +71,19 @@ export function useBeldexWallet() {
       wallet.on('disconnect', invalidate)
       sdkListeners.current = () => { wallet.off('networkChanged', invalidate); wallet.off('accountsChanged', invalidate); wallet.off('disconnect', invalidate) }
       let unlocked = 'Unavailable'
+      let total = 'Unavailable'
       let unlockedAtomic: bigint | null = null
       let approximate = false
       let height: number | null = null
       try {
         const balance = await wallet.getBalance()
         unlocked = fromAtomic(balance.unlocked)
+        total = fromAtomic(balance.total)
         unlockedAtomic = balance.unlocked
         approximate = Boolean(balance.approximate)
         height = balance.height
       } catch { /* wallet connection stays visible, sending remains disabled */ }
-      setConnection({ address, network: String(network), unlocked, unlockedAtomic, approximate, height })
+      setConnection({ address, network: String(network), unlocked, total, unlockedAtomic, approximate, height })
       if (!isTestnet(network)) setError('A mainnet wallet is connected. HOXO can read it, but real sending is blocked. Switch to Beldex Testnet.')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Wallet connection failed')
@@ -90,6 +97,7 @@ export function useBeldexWallet() {
     try { await wallet?.disconnect() } catch { /* app state is still cleared */ }
     setConnection(null)
     setLocalProof(null)
+    setSignedIntents([])
     setError(null)
     setTransaction(current => current?.status === 'unknown' ? current : null)
   }, [])
@@ -106,7 +114,7 @@ export function useBeldexWallet() {
         invalidate()
         return
       }
-      setConnection({ ...connection, unlocked: fromAtomic(current.unlocked), unlockedAtomic: current.unlocked, approximate: Boolean(current.approximate), height: current.height })
+      setConnection({ ...connection, total: fromAtomic(current.total), unlocked: fromAtomic(current.unlocked), unlockedAtomic: current.unlocked, approximate: Boolean(current.approximate), height: current.height })
       setError(null)
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not refresh wallet balance') }
   }, [connection, invalidate])
@@ -203,6 +211,35 @@ export function useBeldexWallet() {
     } finally { setBusyProof(false) }
   }, [connection])
 
+  const signTestnetIntent = useCallback(async (draft: IntentDraft): Promise<void> => {
+    const wallet = sdk.current
+    if (!wallet || !connection) { setError('Connect a Beldex testnet wallet first'); return }
+    if (busyIntent) return
+    setBusyIntent(true)
+    setError(null)
+    try {
+      const [network, address] = await Promise.all([wallet.getNetwork(), wallet.getAddress()])
+      if (network.nettype !== 'testnet' || connection.network !== 'testnet' || address !== connection.address) {
+        throw new Error('Testnet wallet account changed. Reconnect before signing.')
+      }
+      const issuedAt = Date.now()
+      const message = buildTestnetIntent(address, draft, crypto.randomUUID(), issuedAt)
+      const result = await wallet.signMessage(message)
+      if (result.address !== address) throw new Error('Wallet signature account does not match')
+      const verified = await wallet.verifyMessage({ message, signature: result.signature, address })
+      const signed: SignedTestnetIntent = {
+        kind: draft.kind, message, signature: result.signature, verified: true,
+        walletAddress: address, issuedAt,
+      }
+      if (!verified || !verifyIntentAssociation(signed, address, Date.now())) {
+        throw new Error('Wallet did not verify the testnet intent')
+      }
+      // Wallet event observers will clear this when account or network changes.
+      setSignedIntents(existing => [signed, ...existing].slice(0, 10))
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Testnet intent signing failed') }
+    finally { setBusyIntent(false) }
+  }, [connection, busyIntent])
+
   const clearReconciled = useCallback(() => {
     if (busySend || inFlight.current) return
     try {
@@ -213,5 +250,5 @@ export function useBeldexWallet() {
     } catch { setError('Could not clear the pending transaction lock. Check browser storage settings.') }
   }, [busySend])
 
-  return { connection, busy, busySend, busyProof, localProof, error, transaction, unresolvedLock, connect, disconnect, refresh, sendTestnet, refreshTransferStatus, clearReconciled, proveTestnetWallet }
+  return { connection, busy, busySend, busyProof, busyIntent, signedIntents, localProof, error, transaction, unresolvedLock, connect, disconnect, refresh, sendTestnet, refreshTransferStatus, clearReconciled, proveTestnetWallet, signTestnetIntent }
 }
