@@ -8,19 +8,26 @@ import {
 } from 'lucide-react'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
 import { ASSETS, assetSymbols, displayNumber, money, priceOf, type Asset } from './lib/markets'
-import { quoteSwap, SWAP_FEE_BPS } from './lib/swap'
-import { openPosition, positionMetrics, type PerpMarket, type Side, type Position } from './lib/perps'
+import { executeDemoSwap, quoteSwap, SWAP_FEE_BPS } from './lib/swap'
+import { MAINTENANCE_MARGIN_RATE, openPosition, positionMetrics, settleDemoPosition, type PerpMarket, type Side, type Position } from './lib/perps'
 import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, type LendingAction } from './lib/lend'
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
+import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest'
+import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
+import { executeDemoRoute, type RoutePlan } from './lib/routes'
+import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
-type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Portfolio'
+type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Routes' | 'Portfolio' | 'Security' | 'Launch'
 type Notice = { message: string; error: boolean }
 const nav = [
   { name: 'Overview' as const, icon: LayoutDashboard },
   { name: 'Swap' as const, icon: ArrowLeftRight },
   { name: 'Perps' as const, icon: BarChart3 },
   { name: 'Lend' as const, icon: Landmark },
+  { name: 'Routes' as const, icon: ArrowLeftRight },
   { name: 'Portfolio' as const, icon: Wallet },
+  { name: 'Security' as const, icon: LockKeyhole },
+  { name: 'Launch' as const, icon: Zap },
 ]
 
 const iconSymbol: Record<Asset, string> = { BDX: 'B', USDT: '₮', BTC: '₿', ETH: 'Ξ' }
@@ -93,6 +100,7 @@ function Overview({ demo, openPage }: { demo: DemoState; openPage: (page: Page) 
         <button className="product-tile" onClick={() => openPage('Swap')}><span className="product-icon teal"><ArrowLeftRight size={22}/></span><span><b>Hoxo Swap</b><small>Route illustrative token swaps</small></span><ChevronRight size={18}/></button>
         <button className="product-tile" onClick={() => openPage('Perps')}><span className="product-icon purple"><BarChart3 size={22}/></span><span><b>Hoxo Perps</b><small>Explore long and short positions</small></span><ChevronRight size={18}/></button>
         <button className="product-tile" onClick={() => openPage('Lend')}><span className="product-icon blue"><Landmark size={22}/></span><span><b>Hoxo Lend</b><small>Simulate supply and borrow markets</small></span><ChevronRight size={18}/></button>
+        <button className="product-tile" onClick={() => openPage('Routes')}><span className="product-icon teal"><ArrowLeftRight size={22}/></span><span><b>Hoxo Routes</b><small>Explore offline multi-hop liquidity</small></span><ChevronRight size={18}/></button>
         <div className="privacy-box"><LockKeyhole size={19}/><div><b>Privacy by design</b><p>Beldex wallet connection is genuine. Trading and lending are isolated simulations until secure settlement is available.</p></div></div>
       </div>
     </div>
@@ -106,8 +114,8 @@ function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Ass
   const [slippage, setSlippage] = useState('0.5')
   const quantity = Number(amount)
   const quote = useMemo(() => {
-    try { return quoteSwap(from, to, quantity, Number(slippage)) } catch { return null }
-  }, [from, to, quantity, slippage])
+    try { return quoteSwap(from, to, quantity, Number(slippage), demo.pools) } catch { return null }
+  }, [from, to, quantity, slippage, demo.pools])
   const amountValid = amount.trim() !== '' && Number.isFinite(quantity) && quantity > 0
   const sufficient = amountValid && quantity <= demo.balances[from]
   const swapPair = () => { setFrom(to); setTo(from); setAmount('') }
@@ -131,12 +139,12 @@ function Swap({ demo, onSwap }: { demo: DemoState; onSwap: (from: Asset, to: Ass
         </div>
         <div className="swap-settings"><span>Slippage tolerance</span><div className="slip-options">{['0.1', '0.5', '1.0'].map(s => <button key={s} className={slippage === s ? 'selected' : ''} onClick={() => setSlippage(s)}>{s}%</button>)}</div></div>
         <div className="quote-breakdown">
-          <div><span>Illustrative price</span><b>1 {from} ≈ {displayNumber(priceOf(from) / priceOf(to), 6)} {to}</b></div>
+          <div><span>Estimated execution rate · demo</span><b>1 {from} ≈ {quote ? displayNumber(quote.effectiveRate, 6) : "—"} {to}</b></div>
           <div><span>Pool fee ({SWAP_FEE_BPS / 100}%)</span><b>{quote ? money(quote.feeUsd) : '—'}</b></div>
           <div><span>Price impact</span><b>{quote ? displayNumber(quote.priceImpactPct, 3) + '%' : '—'}</b></div>
           <div><span>Minimum received</span><b>{quote ? displayNumber(quote.minOut, 6) + ' ' + to : '—'}</b></div>
         </div>
-        <button className="btn btn-primary full-width trade-cta" disabled={!quote || !sufficient} onClick={() => quote && onSwap(from, to, quantity, quote.amountOut)}>{!amountValid ? 'Enter an amount' : !sufficient ? 'Insufficient demo balance' : 'Simulate swap'}<ArrowRight size={17}/></button>
+        <button className="btn btn-primary full-width trade-cta" disabled={!quote || !sufficient} onClick={() => quote && onSwap(from, to, quantity, quote.minOut)}>{!amountValid ? 'Enter an amount' : !sufficient ? 'Insufficient demo balance' : 'Simulate swap'}<ArrowRight size={17}/></button>
         <p className="under-button"><ShieldCheck size={13}/> No real assets are transferred. All values are examples.</p>
       </section>
       <section className="panel trade-info-panel">
@@ -174,7 +182,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
           <input type="range" aria-label="Simulated market price change" min="-25" max="25" step="1" value={shock} onChange={e => onShock(Number(e.target.value))}/>
           <div className="range-ends"><span>-25% downside</span><button onClick={() => onShock(0)}>Reset price</button><span>+25% upside</span></div>
         </div>
-        <div className="mini-metrics"><div><span>Index price</span><b>{money(priceOf(market))}</b></div><div><span>Mark price</span><b>{money(mark)}</b></div><div><span>Maintenance margin</span><b>5%</b></div><div><span>Funding</span><b>Not modelled</b></div></div>
+        <div className="mini-metrics"><div><span>Index price</span><b>{money(priceOf(market))}</b></div><div><span>Mark price</span><b>{money(mark)}</b></div><div><span>Maintenance margin</span><b>{MAINTENANCE_MARGIN_RATE * 100}%</b></div><div><span>Funding</span><b>Not modelled</b></div></div>
       </section>
       <section className="panel order-panel">
         <CardTitle right={<span className="subtle-pill">ISOLATED</span>}>Place demo order</CardTitle>
@@ -199,7 +207,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Market</th><th>Side</th><th>Notional</th><th>Entry / Mark</th><th>Liquidation</th><th>Unrealised P&L</th><th></th></tr></thead><tbody>
         {demo.positions.map(p => {
           const metrics = positionMetrics(p, priceOf(p.market) * (1 + shock / 100))
-          return <tr key={p.id}><td><b>{p.market}-PERP</b><small className="block-muted">{p.leverage}× leverage</small></td><td><span className={'side-pill ' + p.side}>{p.side.toUpperCase()}</span></td><td>{money(metrics.notional)}</td><td>{money(p.entry)}<small className="block-muted">{money(priceOf(p.market) * (1 + shock / 100))}</small></td><td>{money(metrics.liquidationPrice)}</td><td className={metrics.pnl >= 0 ? 'positive-text' : 'negative-text'}>{money(metrics.pnl)}<small className="block-muted">{displayNumber(metrics.roi, 2)}% ROI</small>{metrics.liquidatable && <small className="negative-text block-muted">Liquidatable</small>}</td><td><button className="mini-btn" onClick={() => onClose(p)}>Close demo</button></td></tr>
+          return <tr key={p.id}><td><b>{p.market}-PERP</b><small className="block-muted">{p.leverage}× leverage</small></td><td><span className={'side-pill ' + p.side}>{p.side.toUpperCase()}</span></td><td>{money(metrics.notional)}</td><td>{money(p.entry)}<small className="block-muted">{money(priceOf(p.market) * (1 + shock / 100))}</small></td><td>{money(metrics.liquidationPrice)}</td><td className={metrics.pnl >= 0 ? 'positive-text' : 'negative-text'}>{money(metrics.pnl)}<small className="block-muted">{displayNumber(metrics.roi, 2)}% ROI</small>{metrics.liquidatable && <small className="negative-text block-muted">Liquidatable</small>}</td><td><button className="mini-btn" onClick={() => onClose(p)}>{metrics.liquidatable ? "Liquidate demo" : "Close demo"}</button></td></tr>
         })}
         {demo.positions.length === 0 && <tr><td colSpan={7}><div className="empty-table"><BarChart3 size={27}/><b>No positions yet</b><span>Open a simulated long or short to get started.</span></div></td></tr>}
       </tbody></table></div>
@@ -207,11 +215,13 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
   </div>
 }
 
-function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingAction, asset: Asset, amount: number) => void }) {
+function Lend({ demo, onAction, onAccrue }: { demo: DemoState; onAction: (action: LendingAction, asset: Asset, amount: number) => void; onAccrue: (days: number) => void }) {
   const [action, setAction] = useState<LendingAction>('supply')
   const [asset, setAsset] = useState<Asset>('BDX')
   const [amount, setAmount] = useState('1000')
   const health = lendingHealth(demo.lending)
+  const projected = useMemo(() => projectDemoInterest(demo.lending, 30), [demo.lending])
+  const projectedHealth = lendingHealth(projected.book)
   const maxAvailable = action === 'supply' ? demo.balances[asset] : action === 'withdraw' ? demo.lending.supplied[asset] ?? 0 : action === 'repay' ? Math.min(demo.balances[asset], demo.lending.borrowed[asset] ?? 0) : health.borrowCapacityUsd / priceOf(asset)
   const activeApy = action === 'supply' || action === 'withdraw' ? supplyApy[asset] : borrowApy[asset]
   const valid = amount.trim() !== '' && Number.isFinite(Number(amount)) && Number(amount) > 0 && Number(amount) <= maxAvailable + 1e-9
@@ -246,6 +256,7 @@ function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingA
         <p className="under-button"><ShieldCheck size={13}/> No live loans, yield accrual, or deposits.</p>
       </section>
     </div>
+    <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Fixed example APRs. Projected values are not credited automatically, and they do not represent real yield. Manually advance the demonstration clock below to apply simulated interest to the local ledger.</p><div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(1)}>Advance 1 demo day</button><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(7)}>Advance 7 demo days</button></div><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
   </div>
 }
@@ -268,6 +279,7 @@ export default function App() {
   const [mobileNav, setMobileNav] = useState(false)
   const [demo, setDemo] = useState<DemoState>(loadDemo)
   const [shock, setShock] = useState(0)
+  const [policy, setPolicy] = useState(defaultDemoPolicy)
   const [notice, setNotice] = useState<Notice | null>(null)
   const wallet = useBeldexWallet()
   useEffect(() => saveDemo(demo), [demo])
@@ -276,32 +288,55 @@ export default function App() {
   function pushActivity(data: DemoState, label: string, detail: string, amount?: string): DemoState {
     return { ...data, activity: [{ id: newId(), label, detail, date: Date.now(), amount }, ...data.activity].slice(0, 50) }
   }
-  function handleSwap(from: Asset, to: Asset, amount: number, out: number) {
-    if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(out) || out <= 0 || demo.balances[from] < amount) return notify('Invalid amount or insufficient demo balance.', true)
-    const balances = { ...demo.balances, [from]: demo.balances[from] - amount, [to]: demo.balances[to] + out }
-    setDemo(pushActivity({ ...demo, balances }, 'Simulated swap', from + ' → ' + to, displayNumber(out, 5) + ' ' + to))
-    notify('Demo swap completed. No on-chain transaction occurred.')
+  function handleSwap(from: Asset, to: Asset, amount: number, minOut: number) {
+    try {
+      assertDemoOperation('swap', policy, amount * priceOf(from))
+      const trade = executeDemoSwap(demo.balances, demo.pools, from, to, amount, minOut)
+      setDemo(pushActivity({ ...demo, balances: trade.balances, pools: trade.pools, poolFeesUsd: demo.poolFeesUsd + trade.quote.feeUsd }, 'Simulated pool swap', from + ' → ' + to, displayNumber(trade.quote.amountOut, 5) + ' ' + to))
+      notify('Demo swap executed; the simulated pool reserves have updated. No blockchain transaction.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Demo trade rejected', true) }
   }
   function handleOpen(market: PerpMarket, side: Side, margin: number, leverage: number) {
     if (!Number.isFinite(margin) || margin <= 0 || demo.balances.USDT < margin) return notify('Insufficient demo USDT balance.', true)
     try {
+      assertDemoOperation('open-perp', policy, margin * leverage, leverage)
       const position = openPosition(market, side, margin, leverage, newId())
       setDemo(pushActivity({ ...demo, balances: { ...demo.balances, USDT: demo.balances.USDT - margin }, positions: [position, ...demo.positions] }, 'Opened demo ' + side, market + '-PERP · ' + leverage + '×', money(margin * leverage)))
       notify('Demo ' + side + ' opened. Margin is only held in the simulator.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Position rejected', true) }
   }
   function handleClose(p: Position) {
-    const metrics = positionMetrics(p, priceOf(p.market) * (1 + shock / 100))
-    const payout = Math.max(0, metrics.equity)
-    setDemo(pushActivity({ ...demo, positions: demo.positions.filter(item => item.id !== p.id), balances: { ...demo.balances, USDT: demo.balances.USDT + payout } }, 'Closed demo ' + p.side, p.market + '-PERP · ' + displayNumber(metrics.roi, 1) + '% ROI', money(metrics.pnl)))
-    notify('Position closed in simulation. No real settlement.')
+    try {
+      assertDemoOperation('close-perp', policy, 0)
+      const settlement = settleDemoPosition(demo.balances, demo.positions, p.id, priceOf(p.market) * (1 + shock / 100))
+      setDemo(pushActivity({ ...demo, balances: settlement.balances, positions: settlement.positions }, settlement.liquidated ? 'Demo liquidation' : 'Closed demo ' + p.side, p.market + '-PERP · ' + displayNumber(settlement.metrics.roi, 1) + '% ROI', money(settlement.payout)))
+      notify(settlement.liquidated ? 'Simulated liquidation completed. No margin returned.' : 'Position settled in simulation. No real assets transferred.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Position settlement rejected', true) }
   }
   function handleLend(action: LendingAction, asset: Asset, amount: number) {
     try {
+      assertDemoOperation(action, policy, amount * priceOf(asset))
       const result = applyLendingAction(demo.lending, demo.balances, action, asset, amount)
       setDemo(pushActivity({ ...demo, balances: result.balances, lending: result.book }, 'Demo ' + action, asset + ' lending market', displayNumber(amount, 5) + ' ' + asset))
       notify('Demo ' + action + ' completed. No assets moved on-chain.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Action rejected', true) }
+  }
+  function handleAccrue(days: number) {
+    try {
+      assertDemoOperation('accrue', policy, 0)
+      const projection = accrueDemoInterest(demo.lending, days * YEAR_MS / 365)
+      const book = projection.book
+      setDemo(pushActivity({ ...demo, lending: book }, 'Simulated interest', days + ' demonstration days', 'Lending ledger updated'))
+      notify(days + ' demo days of illustrative interest applied locally; no real yield or debt created.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Interest simulation rejected', true) }
+  }
+  function handleRoute(route: RoutePlan) {
+    try {
+      assertDemoOperation('route', policy, route.amountIn * priceOf(route.path[0]))
+      const result = executeDemoRoute(route, demo.balances, demo.pools)
+      setDemo(pushActivity({ ...demo, balances: result.balances, pools: result.pools, poolFeesUsd: demo.poolFeesUsd + result.poolFeesUsd }, 'Demo liquidity route', route.path.join(' → '), displayNumber(result.amountOut, 5) + ' ' + route.path[route.path.length - 1]))
+      notify('Local demonstration route completed. No blockchain transaction or bridge transfer.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Demo routing refused', true) }
   }
   function reset() { setDemo(initialState()); setShock(0); notify('Simulation reset to default demo balances.') }
   function go(next: Page) { setPage(next); setMobileNav(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
@@ -333,8 +368,11 @@ export default function App() {
         {page === 'Overview' && <Overview demo={demo} openPage={go}/>}
         {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap}/>}
         {page === 'Perps' && <Perps demo={demo} shock={shock} onShock={setShock} onOpen={handleOpen} onClose={handleClose}/>}
-        {page === 'Lend' && <Lend demo={demo} onAction={handleLend}/>}
+        {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
+        {page === 'Routes' && <RoutesPage demo={demo} policy={policy} onExecute={handleRoute}/>}
         {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset}/>}
+        {page === 'Security' && <SecurityPage policy={policy} poolFeesUsd={demo.poolFeesUsd} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
+        {page === 'Launch' && <LaunchPage/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
     </div>
