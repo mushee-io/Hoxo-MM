@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from 'react'
 import { BdxRpcError, BeldexWeb3, detectProvider, fromAtomic } from '@bdxi/web3js'
-import { isTestnet, validateTestnetSend } from '../lib/testnet'
+import { isTestnet } from '../lib/testnet'
+import { executeOneApprovedTestnetSend } from '../lib/nativeTransfer'
+import { clearTransferLock, readTransferLock, shouldPreserveLockAfterError, type TransferLock } from '../lib/transferSafety'
+import { buildTestnetWalletProof, assertProofResponse, type VerifiedLocalProof } from '../lib/testnetProof'
 
 export type Connection = {
   address: string
@@ -28,11 +31,18 @@ export function useBeldexWallet() {
   const [busySend, setBusySend] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [transaction, setTransaction] = useState<TestnetTransfer | null>(null)
+  const [unresolvedLock, setUnresolvedLock] = useState<TransferLock | null>(() => readTransferLock(localStorage))
+  const [localProof, setLocalProof] = useState<VerifiedLocalProof | null>(null)
+  const [busyProof, setBusyProof] = useState(false)
+  const sdkListeners = useRef<(() => void) | null>(null)
+  const removeListeners = () => { sdkListeners.current?.(); sdkListeners.current = null }
 
   const invalidate = useCallback(() => {
     sdk.current = null
+    removeListeners()
     setConnection(null)
-    // An unknown result must not be presented as a rejected or failed send.
+    setLocalProof(null)
+    // Keep pending outcome information; it may have been broadcast.
     setTransaction(current => current?.status === 'unknown' ? current : null)
     setError('Wallet account or network changed. Reconnect and recheck any previous transfers.')
   }, [])
@@ -49,10 +59,12 @@ export function useBeldexWallet() {
       if (network !== details.nettype || !['testnet', 'mainnet'].includes(network)) {
         throw new Error('Wallet network could not be verified; no testnet transfer is available')
       }
+      removeListeners()
       sdk.current = wallet
       wallet.on('networkChanged', invalidate)
       wallet.on('accountsChanged', invalidate)
       wallet.on('disconnect', invalidate)
+      sdkListeners.current = () => { wallet.off('networkChanged', invalidate); wallet.off('accountsChanged', invalidate); wallet.off('disconnect', invalidate) }
       let unlocked = 'Unavailable'
       let unlockedAtomic: bigint | null = null
       let approximate = false
@@ -74,8 +86,10 @@ export function useBeldexWallet() {
   const disconnect = useCallback(async () => {
     const wallet = sdk.current
     sdk.current = null
+    removeListeners()
     try { await wallet?.disconnect() } catch { /* app state is still cleared */ }
     setConnection(null)
+    setLocalProof(null)
     setError(null)
     setTransaction(current => current?.status === 'unknown' ? current : null)
   }, [])
@@ -99,8 +113,8 @@ export function useBeldexWallet() {
 
   const sendTestnet = useCallback(async (to: string, displayAmount: string): Promise<void> => {
     if (inFlight.current || busySend) return
-    if (transaction?.status === 'unknown') {
-      setError('Previous transfer outcome is unknown. Do not initiate another transfer until you reconcile it in the wallet.')
+    if (unresolvedLock || transaction?.status === 'unknown') {
+      setError('A previous testnet transfer may have broadcast. Check the wallet history and reconcile it before starting another.')
       return
     }
     const wallet = sdk.current
@@ -109,25 +123,37 @@ export function useBeldexWallet() {
     setBusySend(true)
     setError(null)
     try {
-      const details = await wallet.getNetwork()
-      const current = await wallet.getAddress()
-      if (details.nettype !== 'testnet' || connection.network !== 'testnet' ||
-        current !== connection.address) throw new Error('Testnet/account verification failed. Switch to Beldex TESTNET and reconnect.')
-      const balance = await wallet.getBalance()
-      const { atomic } = validateTestnetSend(details.nettype, to, displayAmount, balance.unlocked)
-      // One wallet-authorised send only. Unknown outcomes are NEVER auto-retried;
-      // users should inspect their own testnet wallet before sending again.
-      setTransaction({ status: 'awaiting-approval', message: 'Review this testnet-only BDX transfer in your wallet.' })
-      const result = await wallet.sendTransaction({ to, amount: atomic, priority: 1 })
+      const key = crypto.randomUUID()
+      const result = await executeOneApprovedTestnetSend(wallet, localStorage, {
+        expectedAddress: connection.address,
+        expectedNetwork: connection.network,
+        recipient: to,
+        displayAmount,
+      }, key, Date.now(), () => {
+        setUnresolvedLock(readTransferLock(localStorage))
+        setTransaction({ status: 'awaiting-approval', message: 'Review this testnet-only BDX transfer in your wallet.' })
+      })
+      clearTransferLock(localStorage)
+      setUnresolvedLock(null)
       setTransaction({ status: 'broadcast', txHash: result.txHash, fee: fromAtomic(result.fee), operationId: result.operationId, message: 'Wallet returned a transaction hash. Check your wallet for chain confirmation.' })
       await refresh()
     } catch (cause) {
-      if (BeldexWeb3.isUserRejection(cause)) {
-        setTransaction({ status: 'rejected', message: 'Wallet approval was declined. Nothing was requested again.' })
-      } else if (BdxRpcError.isUnknownOutcome(cause)) {
-        setTransaction({ status: 'unknown', message: 'Outcome unknown: the wallet may already have broadcast this transfer. DO NOT RESEND. Check wallet history first.' })
+      const code = cause instanceof BdxRpcError ? cause.code : undefined
+      const isRejected = BeldexWeb3.isUserRejection(cause)
+      if (isRejected) {
+        try { clearTransferLock(localStorage); setUnresolvedLock(null) }
+        catch { setError('Wallet declined; local storage remains locked. Reconcile it before future use.') }
+        setTransaction({ status: 'rejected', message: 'Wallet approval was declined. No transaction was resubmitted.' })
+      } else if (unresolvedLock || readTransferLock(localStorage)) {
+        // Any error after starting a wallet approval can be an unknown outcome.
+        // This includes timeouts, provider errors and connection changes.
+        if (shouldPreserveLockAfterError(code)) {
+          setUnresolvedLock(readTransferLock(localStorage))
+          setTransaction({ status: 'unknown', message: 'Wallet send outcome unverified. Do not resend until you check your testnet wallet history.' })
+          setError('Transaction may already exist. Reconcile the wallet history before sending anything else.')
+        }
       } else {
-        const message = cause instanceof Error ? cause.message : 'Testnet transfer failed'
+        const message = cause instanceof Error ? cause.message : 'Testnet preflight failed'
         setTransaction({ status: 'failed', message })
         setError(message)
       }
@@ -135,7 +161,7 @@ export function useBeldexWallet() {
       inFlight.current = false
       setBusySend(false)
     }
-  }, [busySend, connection, refresh, transaction?.status])
+  }, [busySend, connection, refresh, transaction?.status, unresolvedLock])
 
   const refreshTransferStatus = useCallback(async () => {
     const wallet = sdk.current
@@ -155,5 +181,37 @@ export function useBeldexWallet() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not check wallet operation') }
   }, [connection?.network, transaction?.operationId])
 
-  return { connection, busy, busySend, error, transaction, connect, disconnect, refresh, sendTestnet, refreshTransferStatus }
+  const proveTestnetWallet = useCallback(async () => {
+    const wallet = sdk.current
+    if (!wallet || !connection) { setError('Connect a testnet wallet to sign a proof'); return }
+    setBusyProof(true)
+    setError(null)
+    setLocalProof(null)
+    try {
+      const [network, address] = await Promise.all([wallet.getNetwork(), wallet.getAddress()])
+      if (network.nettype !== 'testnet' || connection.network !== 'testnet' ||
+          address !== connection.address) throw new Error('Testnet account mismatch')
+      const message = buildTestnetWalletProof(address, crypto.randomUUID(), Date.now())
+      const signed = await wallet.signMessage(message)
+      if (signed.address !== address) throw new Error('Unexpected signing account')
+      const verified = await wallet.verifyMessage({ message, address, signature: signed.signature })
+      const proof = { message, address, signature: signed.signature, verified }
+      assertProofResponse(proof)
+      setLocalProof(proof)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Testnet signature verification failed')
+    } finally { setBusyProof(false) }
+  }, [connection])
+
+  const clearReconciled = useCallback(() => {
+    if (busySend || inFlight.current) return
+    try {
+      clearTransferLock(localStorage)
+      setUnresolvedLock(null)
+      setTransaction(current => current?.status === 'unknown' ? null : current)
+      setError(null)
+    } catch { setError('Could not clear the pending transaction lock. Check browser storage settings.') }
+  }, [busySend])
+
+  return { connection, busy, busySend, busyProof, localProof, error, transaction, unresolvedLock, connect, disconnect, refresh, sendTestnet, refreshTransferStatus, clearReconciled, proveTestnetWallet }
 }

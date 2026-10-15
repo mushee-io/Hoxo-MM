@@ -11,7 +11,9 @@ Updated 15 October 2026. Status: **native testnet BDX wallet transfer flow integ
 - Call **only** the official wallet SDK's `sendTransaction` with user approval, priority 1. No private key, view key, signing service, user session token or relayer is stored or transmitted to an HOXO server.
 - Display SDK-reported hash and fee, where available; optional wallet-operation status check when the wallet supplies `operationId`.
 - Distinguish wallet rejection, error, and **unknown outcome**. Unknown means it **MAY** have broadcast. Never automatically repeat. This code does not assert blockchain confirmation solely from a wallet-returned hash.
-- Keep transfer state in React memory (not saved in localStorage, analytics or a database).
+- Keep transfer details in React memory only. Save a **minimal opaque in-progress lock** (UUID and timestamp only; no recipient, amount, wallet address, keys or tx hash) in local browser storage before wallet approval. An unknown outcome prevents fresh requests even after reload. Manual unlocking requires reviewing the wallet's history; it never triggers a resend.
+- User-approved testnet **message signing and verification** is available. Its nonce is browser-generated, so it demonstrates wallet control but MUST NOT be used as a trusted login or server-authentication mechanism.
+- A fail-closed Privacy Token SDK adapter contract exists, with exact integer-unit conversion and no operational asset RPC methods.
 
 **Wallet SDK boundary:** currently published `@bdxi/web3js` v1.0.1 supports native BDX transfers and sign/verify operations. It does **not** publicly document a method to issue, enumerate or send Beldex *Privacy Tokens* (assets distinct from BDX). We must not guess method names or send wallet-RPC commands from a webpage.
 
@@ -24,7 +26,7 @@ Updated 15 October 2026. Status: **native testnet BDX wallet transfer flow integ
 5. Enter Wallet B's full address and a **small amount**, e.g. `0.01` BDX if spendable and above current network minimum/fees. Read the explicit summary and tick confirmation.
 6. Click **Request TESTNET wallet transfer**; inspect the wallet's recipient, amount and fee again. Approve **inside the extension**.
 7. Capture the wallet-returned transaction hash (if present). Inspect Wallet A's history and Wallet B's incoming balance. Wait for the wallet to report an actual chain confirmation, and check the explorer/owned recipient as appropriate.
-8. Test denial, wrong-network (mainnet), invalid address, insufficient unlocked funds, network/account switching, disconnected wallet and a transfer with an uncertain result. **Do not replay an uncertain payment.**
+8. Test denial, wrong-network (mainnet), invalid address, approximate/insufficient unlocked funds, network/account switching, disconnected wallet and a transfer with an uncertain result. **Do not replay an uncertain payment.** Reload after a deliberately induced unknown send and verify the app retains its safety lock; reconcile wallet history before explicitly clearing it.
 9. Document tx hash and test results *privately*; don't include recipients, wallet sync logs, or sensitive metadata in public issue comments.
 
 ### What the application cannot prove alone

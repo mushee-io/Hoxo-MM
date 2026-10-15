@@ -13,7 +13,7 @@ npm run build
 Deploy the `dist/` output using the Vite preset. `vercel.json` provides security headers and indexing restrictions suitable for a research preview. Smoke-test wallet connection on **a test-only wallet**, route expiry, rejected invalid positions, risk-reducing actions under pause, and browser reset.
 
 ### Deployment safety checklist
-- [x] Wallet connection, native TESTNET BDX transfer (user approval), separated demo balances and mainnet send lockout
+- [x] Wallet connection, native TESTNET BDX transfer (user approval), restart-persistent unknown-outcome lock, local signed proof demonstration, separated demo balances and mainnet send lockout
 - [ ] Funded two-wallet testnet BDX transfer E2E manually verified
 - [x] No real **DeFi settlement** operation in the application; native TESTNET BDX transfers are separately authorised by the wallet
 - [x] Static simulation and route research UI
