@@ -32,7 +32,7 @@ npm run build
 | M3 HOXO Perps | Demonstration long/short trading, isolated margin and liquidation-aware position closure | No live matching, settlement, vaults or price oracles |
 | M4 HOXO Lend | Demonstration supply/borrow/repay/withdraw, LTV controls and simple interest accrual | No enforceable collateral, loans or market rates |
 | M5 Cross-chain routing | Direct vs two-hop local quote comparison, expiry limits and blocked external-chain routes | **No live bridges** |
-| M6 Protocol security | Browser-demo pause, position/trade limits, fail-closed live settlement guard and threat-model documents | Requires authenticated/enforceable production controls and audits |
+| M6 Protocol security | Browser-demo pause, position/trade limits, hypothetical fee/BDX buyback allocation, fail-closed live settlement guard and threat-model documents | Requires authenticated/enforceable production controls and audits |
 | M7 Launch readiness | Readiness page, Vercel research-preview headers, robots exclusion, operations and release runbooks | **Production blocked** |
 
 ## App navigation
@@ -53,6 +53,7 @@ npm run build
 - `src/hooks/useBeldexWallet.ts` — Beldex wallet authorised, read-only integration
 - `src/lib/routes.ts` — M5 offline routing comparisons, TTL, max value, immutable local execution
 - `src/lib/security.ts` — M6 demonstration controls and hard-disabled live settlement
+- `src/lib/economics.ts` — M6 transparent, hypothetical LP / reserve / BDX buyback fee allocation
 - `src/lib/readiness.ts` — M7 release blockers and classification
 - `src/lib/swap.ts`, `src/lib/perps.ts`, `src/lib/lend.ts` — local financial simulations only
 - `src/lib/demo.ts`, `src/lib/interest.ts` — local storage validation and illustrative accrual
