@@ -12,7 +12,7 @@ import { executeDemoSwap, quoteSwap, SWAP_FEE_BPS } from './lib/swap'
 import { MAINTENANCE_MARGIN_RATE, openPosition, positionMetrics, settleDemoPosition, type PerpMarket, type Side, type Position } from './lib/perps'
 import { applyLendingAction, borrowApy, lendingHealth, supplyApy, totalValue, type LendingAction } from './lib/lend'
 import { initialState, loadDemo, newId, saveDemo, type DemoState } from './lib/demo'
-import { projectDemoInterest } from './lib/interest'
+import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest'
 
 type Page = 'Overview' | 'Swap' | 'Perps' | 'Lend' | 'Portfolio'
 type Notice = { message: string; error: boolean }
@@ -208,7 +208,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
   </div>
 }
 
-function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingAction, asset: Asset, amount: number) => void }) {
+function Lend({ demo, onAction, onAccrue }: { demo: DemoState; onAction: (action: LendingAction, asset: Asset, amount: number) => void; onAccrue: (days: number) => void }) {
   const [action, setAction] = useState<LendingAction>('supply')
   const [asset, setAsset] = useState<Asset>('BDX')
   const [amount, setAmount] = useState('1000')
@@ -249,7 +249,7 @@ function Lend({ demo, onAction }: { demo: DemoState; onAction: (action: LendingA
         <p className="under-button"><ShieldCheck size={13}/> No live loans, yield accrual, or deposits.</p>
       </section>
     </div>
-    <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Simple APR simulation only — figures are not credited to balances and are not real yield. Debt accrues independently of collateral.</p><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
+    <div className="panel"><CardTitle>30-day illustrative interest projection</CardTitle><p className="muted smaller">Fixed example APRs. Projected values are not credited automatically, and they do not represent real yield. Manually advance the demonstration clock below to apply simulated interest to the local ledger.</p><div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 14 }}><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(1)}>Advance 1 demo day</button><button className="btn btn-outline" disabled={health.collateralUsd === 0 && health.debtUsd === 0} onClick={() => onAccrue(7)}>Advance 7 demo days</button></div><div className="mini-metrics"><div><span>Estimated supply interest</span><b>{money(totalValue(projected.supplyInterest))}</b></div><div><span>Estimated borrowing interest</span><b>{money(totalValue(projected.borrowInterest))}</b></div><div><span>Projected health factor</span><b>{Number.isFinite(projectedHealth.healthFactor) ? displayNumber(projectedHealth.healthFactor, 2) + "×" : "∞"}</b></div></div></div>
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
   </div>
 }
@@ -309,6 +309,14 @@ export default function App() {
       notify('Demo ' + action + ' completed. No assets moved on-chain.')
     } catch (err) { notify(err instanceof Error ? err.message : 'Action rejected', true) }
   }
+  function handleAccrue(days: number) {
+    try {
+      const projection = accrueDemoInterest(demo.lending, days * YEAR_MS / 365)
+      const book = projection.book
+      setDemo(pushActivity({ ...demo, lending: book }, 'Simulated interest', days + ' demonstration days', 'Lending ledger updated'))
+      notify(days + ' demo days of illustrative interest applied locally; no real yield or debt created.')
+    } catch (err) { notify(err instanceof Error ? err.message : 'Interest simulation rejected', true) }
+  }
   function reset() { setDemo(initialState()); setShock(0); notify('Simulation reset to default demo balances.') }
   function go(next: Page) { setPage(next); setMobileNav(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
@@ -339,7 +347,7 @@ export default function App() {
         {page === 'Overview' && <Overview demo={demo} openPage={go}/>}
         {page === 'Swap' && <Swap demo={demo} onSwap={handleSwap}/>}
         {page === 'Perps' && <Perps demo={demo} shock={shock} onShock={setShock} onOpen={handleOpen} onClose={handleClose}/>}
-        {page === 'Lend' && <Lend demo={demo} onAction={handleLend}/>}
+        {page === 'Lend' && <Lend demo={demo} onAction={handleLend} onAccrue={handleAccrue}/>}
         {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset}/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
