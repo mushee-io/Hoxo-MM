@@ -1,7 +1,7 @@
 import { assetSymbols, validAmount, type Asset } from './markets'
 import { type WalletBalances, type LendingBook, demoBalances, emptyBook } from './lend'
 import { type Position } from './perps'
-import { initialDemoPools, pairKey, type PoolBook } from './swap'
+import { initialDemoPools, type PoolBook } from './swap'
 
 export type Activity = { id: string; label: string; detail: string; date: number; amount?: string }
 export type DemoState = {
