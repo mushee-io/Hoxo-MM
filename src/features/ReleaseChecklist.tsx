@@ -5,7 +5,7 @@ import { RELEASE_RESEARCH_CHECKS, readPersonalReviews, releaseResearchSummary,
 
 /** M18–20 checkboxes: immutable code-evidence checks + local user review. */
 export function ReleaseChecklist() {
-  const [checked,setChecked]=useState<string[]>(()=>readPersonalReviews(localStorage))
+  const [checked,setChecked]=useState<string[]>(()=>typeof window==='undefined'?[]:readPersonalReviews(window.localStorage))
   const [error,setError]=useState('')
   const summary=releaseResearchSummary(checked)
   function toggle(id:string,value:boolean){

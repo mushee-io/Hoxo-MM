@@ -9,6 +9,8 @@ import { CAPABILITY_CATALOGUE, capabilityAvailability, type CapabilityContext } 
 import { estimateDemoEconomics } from '../lib/economics'
 import { TestnetAssetCatalogue } from './TestnetAssets'
 import { TokenIntegrationLab } from './ProtocolLabs'
+import { BridgeResearchLab } from './FinalProtocolLabs'
+import { ReleaseChecklist } from './ReleaseChecklist'
 import { type DemoState } from '../lib/demo'
 
 export function RoutesPage({ demo, policy, onExecute }: {
@@ -66,6 +68,7 @@ export function RoutesPage({ demo, policy, onExecute }: {
         {destination === 'beldex-testnet' && <p className="muted smaller">Simulated USD value: {Number.isFinite(amountNumber) && amountNumber > 0 ? money(amountNumber * priceOf(from)) : '—'}. This interface never calls a bridge.</p>}
       </section>
     </div>
+    <BridgeResearchLab/>
   </div>
 }
 
@@ -143,11 +146,12 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer, wallet
       <div className="card-heading"><h3>Development milestones 1–20</h3><span className="subtle-pill">{milestoneOverview().completed} / 20 VERIFIED IN CODE</span></div>
       <p className="muted smaller">Status is evidence-based. Research maths and off-chain approvals do not constitute live trading. Upstream dependencies and real-world wallet tests cannot be completed by frontend changes alone.</p>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>#</th><th>Workstream</th><th>Status</th><th>Evidence / implementation</th><th>Required acceptance</th></tr></thead><tbody>
-        {MILESTONES.map(m => <tr key={m.number}><td>{m.number}</td><td><b>{m.title}</b></td><td><span className={'side-pill ' + (m.state === 'implemented' ? 'neutral' : m.state === 'blocked' ? 'short' : '')}>{m.state.toUpperCase()}</span></td><td className="readiness-requirement">{m.evidence}</td><td className="readiness-requirement">{m.nextGate}</td></tr>)}
+        {MILESTONES.map(m => <tr key={m.number}><td><input type="checkbox" disabled checked={m.state==='implemented'} aria-label={'Milestone '+m.number+' independently implemented status'}/> {m.number}</td><td><b>{m.title}</b></td><td><span className={'side-pill ' + (m.state === 'implemented' ? 'neutral' : m.state === 'blocked' ? 'short' : '')}>{m.state.toUpperCase()}</span></td><td className="readiness-requirement">{m.evidence}</td><td className="readiness-requirement">{m.nextGate}</td></tr>)}
       </tbody></table></div>
     </section>
     <TestnetAssetCatalogue purpose="launch"/>
     <TokenIntegrationLab/>
+    <ReleaseChecklist/>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
         {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
