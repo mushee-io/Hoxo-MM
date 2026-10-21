@@ -44,6 +44,8 @@ function AnimatedLines() {
         className={'alwayzz-side-line alwayzz-side-line--'+side}
         style={{
           '--alwayzz-line-index':i,
+          '--alwayzz-line-offset':(i*15)+'px',
+          '--alwayzz-top-offset':(i*10)+'px',
           '--alwayzz-line-width':(60+i*10)+'px',
           animationDelay:(i*0.25)+'s',
         } as CSSProperties}
@@ -53,6 +55,8 @@ function AnimatedLines() {
       className="alwayzz-top-line"
       style={{
         '--alwayzz-line-index':i,
+        '--alwayzz-line-offset':(i*15)+'px',
+        '--alwayzz-top-offset':(i*10)+'px',
         '--alwayzz-line-width':(60+i*10)+'px',
         animationDelay:(i*0.25)+'s',
       } as CSSProperties}

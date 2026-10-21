@@ -10,7 +10,7 @@
   min-height:100vh; width:100%; overflow-x:hidden;
 }
 .alwayzz-root *, .alwayzz-root *::before, .alwayzz-root *::after{box-sizing:border-box}
-.alwayzz-root button {font:inherit;cursor:pointer}
+.alwayzz-root button {cursor:pointer}
 .alwayzz-root a {color:inherit;text-decoration:none}
 .alwayzz-root :is(button,a):focus-visible{outline:2px solid #0a0a0a;outline-offset:4px}
 .alwayzz-header {position:fixed;inset:0 0 auto;z-index:100;padding:19px 36px;pointer-events:none}
@@ -34,8 +34,8 @@
 .alwayzz-line-art{position:absolute;z-index:0;inset:0;pointer-events:none;overflow:hidden}
 .alwayzz-side-line,.alwayzz-top-line{position:absolute;display:block;border:2.5px solid #FCFAF8;opacity:0;animation:alwayzz-line-pulse 5s ease-in-out infinite;will-change:opacity,transform}
 .alwayzz-side-line{top:-14%;height:130%;width:var(--alwayzz-line-width)}
-.alwayzz-side-line--left{left:calc(-195px + var(--alwayzz-line-index)*15px);border-left:0;border-radius:0 80% 80% 0}
-.alwayzz-side-line--right{right:calc(-195px + var(--alwayzz-line-index)*15px);border-right:0;border-radius:80% 0 0 80%}
+.alwayzz-side-line--left{left:calc(-195px + var(--alwayzz-line-offset));border-left:0;border-radius:0 80% 80% 0}
+.alwayzz-side-line--right{right:calc(-195px + var(--alwayzz-line-offset));border-right:0;border-radius:80% 0 0 80%}
 .alwayzz-top-line{display:none}
 @keyframes alwayzz-line-pulse{0%{opacity:0;transform:scale(1)}15%{opacity:.9}70%{opacity:.4}100%{opacity:0;transform:scale(.85)}}
 @keyframes alwayzz-marquee-left{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -77,7 +77,7 @@
   .alwayzz-hero{min-height:760px;padding:120px 24px 96px}
   .alwayzz-hero::before{inset:auto;top:50%;left:50%;width:120vh;height:120vw;min-height:100%;min-width:100%;transform:translate(-50%,-50%) rotate(90deg);background-size:cover;background-position:center}
   .alwayzz-side-line{display:none}
-  .alwayzz-top-line{display:block;left:-12%;width:124%;height:var(--alwayzz-line-width);top:calc(-190px + var(--alwayzz-line-index)*10px);border-top:0;border-radius:0 0 80% 80%}
+  .alwayzz-top-line{display:block;left:-12%;width:124%;height:var(--alwayzz-line-width);top:calc(-190px + var(--alwayzz-top-offset));border-top:0;border-radius:0 0 80% 80%}
   .alwayzz-hero h1{font-size:clamp(44px,13vw,52px);max-width:380px}
   .alwayzz-description{font-size:16px;margin-top:23px;max-width:395px}
   .alwayzz-cta-row{flex-direction:column;width:100%;gap:12px}

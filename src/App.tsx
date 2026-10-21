@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeftRight, ArrowRight, BarChart3, CheckCircle2, CircleAlert,
+  ArrowLeftRight, BarChart3, CheckCircle2, CircleAlert,
   Copy, ExternalLink, Landmark, LayoutDashboard, LockKeyhole, Menu, RefreshCw,
   ShieldCheck, Wallet, Zap
 } from 'lucide-react'
 import Landing from './Landing'
+import { AlwayzzInside } from './features/AlwayzzInside'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetAssetCatalogue } from './features/TestnetAssets'
@@ -13,7 +14,7 @@ import { SwapSection } from './features/SwapSection'
 import { PerpsSection } from './features/PerpsSection'
 import { LendSection } from './features/LendSection'
 import { RoutesSection } from './features/RoutesSection'
-import { LIVE_PAGES, SECTION_DESCRIPTIONS, livePageForPath, type LivePage } from './lib/liveNavigation'
+import { LIVE_PAGES, livePageForPath, type LivePage } from './lib/liveNavigation'
 
 const ICONS = {
   Overview: LayoutDashboard, Testnet: ShieldCheck, Swap: ArrowLeftRight,
@@ -47,47 +48,6 @@ function LivePortfolio({wallet}: {wallet: ReturnType<typeof useBeldexWallet>}) {
   </div>
 }
 
-function Overview({wallet,openPage}:{
-  wallet:ReturnType<typeof useBeldexWallet>,openPage:(page:LivePage)=>void
-}) {
-  const connection=wallet.connection
-  return <div className="stack" data-section="overview">
-    <div className="hero">
-      <div className="hero-grid" aria-hidden="true"/><div className="hero-halo" aria-hidden="true"/>
-      <div className="hero-content">
-        <div className="hero-kicker"><ShieldCheck size={14}/> HOXO ON BELDEX</div>
-        <h1>Own your edge.<span> Keep your privacy.</span></h1>
-        <p>Connect your Beldex wallet, manage native BDX on testnet and inspect the public Privacy Token registry. Financial products stay unavailable until real settlement is verified.</p>
-        <div className="hero-buttons">
-          <button className="btn btn-primary" onClick={()=>openPage('Testnet')}><Wallet size={16}/> Open Beldex wallet <ArrowRight size={17}/></button>
-          <button className="btn btn-outline" onClick={()=>openPage('Portfolio')}>View actual wallet balances <ArrowRight size={16}/></button>
-        </div>
-        <div className="hero-note"><span className="green-dot"/> Official wallet integration · Testnet BDX only</div>
-      </div>
-      <div className="hero-mark" aria-hidden="true"><div className="mark-ring"><span>H</span></div></div>
-    </div>
-    <div className="metrics-grid three">
-      <div className="metric-card"><div className="metric-top">Connected network</div><strong>{connection?.network??'Not connected'}</strong><span className="metric-sub">Beldex extension wallet</span></div>
-      <div className="metric-card"><div className="metric-top">Unlocked BDX</div><strong>{connection?.unlocked??'—'}</strong><span className="metric-sub">{connection?.approximate?'Wallet syncing':'Wallet-reported amount; not USD'}</span></div>
-      <div className="metric-card"><div className="metric-top">Live DeFi settlement</div><strong>Not enabled</strong><span className="metric-sub">Requires reviewed chain infrastructure</span></div>
-    </div>
-    <div className="panel">
-      <div className="card-heading"><h3>Explore every HOXO section</h3><span className="subtle-pill">9 DEDICATED SECTIONS</span></div>
-      <div className="live-product-grid">
-        {LIVE_PAGES.filter(item=>item!=='Overview').map(item=>{
-          const Icon=ICONS[item]
-          return <button key={item} type="button" className="product-tile" onClick={()=>openPage(item)}>
-            <span className="product-icon teal"><Icon size={19}/></span>
-            <span><b>{item}</b><small>{SECTION_DESCRIPTIONS[item]}</small></span>
-            <ArrowRight size={16}/>
-          </button>
-        })}
-      </div>
-      <p className="muted smaller">Native BDX wallet connectivity and wallet-approved testnet sends are separate from swaps, derivatives, borrowing and bridges.</p>
-    </div>
-  </div>
-}
-
 export default function App(){
   const [page,setPage]=useState<LivePage|null>(()=>livePageForPath(window.location.pathname))
   const [menuOpen,setMenuOpen]=useState(false)
@@ -105,6 +65,7 @@ export default function App(){
     window.scrollTo(0,0)
   }
   if(page===null)return <Landing onEnter={go}/>
+  if(page==='Overview')return <AlwayzzInside onNavigate={go}/>
   return <div className="app-shell">
     <aside className={'sidebar '+(menuOpen?'sidebar-open':'')}>
       <div className="sidebar-brand"><div className="logo-shape"><span>H</span></div>
@@ -148,7 +109,6 @@ export default function App(){
           <button title="Copy wallet address" aria-label="Copy wallet address" onClick={()=>void navigator.clipboard.writeText(wallet.connection!.address).catch(()=>setCopyError('Could not copy wallet address'))}><Copy size={14}/></button>
           <span className="live-balance">Unlocked: {wallet.connection.unlocked} BDX{wallet.connection.approximate?' (approx.)':''}</span>
         </div>}
-        {page==='Overview'&&<Overview wallet={wallet} openPage={go}/>}
         {page==='Testnet'&&<BeldexTestnetPage wallet={wallet}/>}
         {page==='Swap'&&<SwapSection wallet={wallet} onOpenTestnet={()=>go('Testnet')}/>}
         {page==='Perps'&&<PerpsSection wallet={wallet} onOpenTestnet={()=>go('Testnet')}/>}
