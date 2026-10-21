@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseTokenDescriptor,
+  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseTokenDescriptor, parseVerifiedPublicTokenLookup,
   parseTokenList, TOKEN_PAGE_LIMIT,
 } from './testnetCatalogue'
 
@@ -30,7 +30,8 @@ describe('published public Beldex testnet token metadata', () => {
     expect(parseTokenList({ token_ids: ['invalid'] })).toBeNull()
     expect(parseTokenList({ token_ids: false })).toBeNull()
     expect(parseTokenList({ token_ids: [], total_count: 0 })).toEqual({ ids: [], totalCount: 0 })
-    expect(parseTokenList({ token_ids: Array(15).fill(id), total_count: 50 })?.ids).toHaveLength(TOKEN_PAGE_LIMIT)
+    expect(parseTokenList({ token_ids: Array(15).fill(id), total_count: 50 })).toBeNull()
+    expect(parseTokenList({ token_ids: [id, id.toUpperCase()], total_count: 2 })).toBeNull()
   })
   it('formats large atomic supplies precisely without floating-point rounding', () => {
     expect(formatAtomicAssetBalance('123456789000', 9)).toBe('123.456789')

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight, Database, RefreshCw, ShieldAlert } from 'lucide-react'
 import {
-  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, type TokenCatalogue,
+  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseVerifiedPublicTokenLookup, type TokenCatalogue,
   type PublicPrivacyToken, TOKEN_PAGE_LIMIT,
 } from '../lib/testnetCatalogue'
 
@@ -26,15 +26,9 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
       const response = await fetch('/api/testnet-token?id=' + id, { cache: 'no-store' })
       if (!response.ok) throw new Error('The testnet LWS did not return a confirmed public descriptor for that ID.')
       const result: unknown = await response.json()
-      if (!result || typeof result !== 'object' || !('asset' in result)) throw new Error('Unrecognised testnet asset reply')
-      const raw = (result as { asset: unknown }).asset
-      if (!raw || typeof raw !== 'object') throw new Error('Invalid public token descriptor')
-      const asset = raw as PublicPrivacyToken
-      if (asset.tokenId !== id.toLowerCase() || !/^\d{1,40}$/.test(asset.currentSupplyAtomic) ||
-          !Number.isInteger(asset.decimals) || asset.decimals < 0 || asset.decimals > 18) {
-        throw new Error('Token data did not match the requested testnet asset ID')
-      }
-      setFound(asset)
+      const verified = parseVerifiedPublicTokenLookup(result, id)
+      if (!verified) throw new Error('Public asset metadata did not match the verified testnet descriptor')
+      setFound(verified)
     } catch (cause) { setLookupError(cause instanceof Error ? cause.message : 'Public token lookup failed') }
     finally { setCheckingToken(false) }
   }

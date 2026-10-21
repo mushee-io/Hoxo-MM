@@ -54,7 +54,11 @@ export function parseTokenList(raw: unknown): { ids: string[]; totalCount: numbe
   const p = raw as Record<string, unknown>
   if (!Array.isArray(p.token_ids) || p.token_ids.some(id => !hexTokenId(id))) return null
   const totalCount = Number.isSafeInteger(p.total_count) && Number(p.total_count) >= 0 ? Number(p.total_count) : null
-  return { ids: p.token_ids.slice(0, TOKEN_PAGE_LIMIT).map((id: string) => id.toLowerCase()), totalCount }
+  // Refuse ambiguous duplicate asset IDs and unexpectedly oversized pages.
+  if (p.token_ids.length > TOKEN_PAGE_LIMIT) return null
+  const ids = p.token_ids.map((id: string) => id.toLowerCase())
+  if (new Set(ids).size !== ids.length) return null
+  return { ids, totalCount }
 }
 export function formatAtomicAssetBalance(value: string, decimals: number): string {
   if (!/^\d{1,40}$/.test(value) || !Number.isInteger(decimals) || decimals < 0 || decimals > 18) {
@@ -67,16 +71,40 @@ export function formatAtomicAssetBalance(value: string, decimals: number): strin
   const fractional = (atomic % scale).toString().padStart(decimals, '0').replace(/0+$/, '')
   return fractional ? whole + '.' + fractional : whole
 }
+/**
+ * Strictly validate the server's public asset metadata reply before display.
+ * This proves a public descriptor response only, NEVER wallet token ownership.
+ */
+export function parseVerifiedPublicTokenLookup(raw: unknown, requestedId: string): PublicPrivacyToken | null {
+  if (!hexTokenId(requestedId) || !raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+  const response = raw as Record<string, unknown>
+  if (response.network !== 'beldex-testnet' ||
+      response.source !== 'official-wallet-configured-testnet-lws' ||
+      typeof response.obtainedAt !== 'string' ||
+      !Number.isFinite(Date.parse(response.obtainedAt)) ||
+      !response.asset || typeof response.asset !== 'object' || Array.isArray(response.asset)) return null
+  const asset = response.asset as Record<string, unknown>
+  const validated = parseTokenDescriptor({
+    token_id: asset.tokenId, ticker: asset.ticker, full_name: asset.name,
+    owner: asset.owner, decimal_point: asset.decimals,
+    current_supply: asset.currentSupplyAtomic, total_max_supply: asset.maximumSupplyAtomic,
+  })
+  return validated?.tokenId === requestedId.toLowerCase() ? validated : null
+}
+
 export function isTokenCatalogue(raw: unknown): raw is TokenCatalogue {
   if (!raw || typeof raw !== 'object') return false
   const x = raw as Record<string, unknown>
   return x.network === 'beldex-testnet' && x.source === 'official-wallet-configured-testnet-lws' &&
+    x.query === 'public-token-metadata-only' && typeof x.partial === 'boolean' &&
+    (x.totalCount === null || (Number.isSafeInteger(x.totalCount) && Number(x.totalCount) >= 0)) &&
     Array.isArray(x.tokens) && x.tokens.length <= TOKEN_PAGE_LIMIT &&
+    new Set((x.tokens as Array<{ tokenId?: unknown }>).map(t => t && typeof t === 'object' && typeof t.tokenId === 'string' ? t.tokenId.toLowerCase() : '')).size === x.tokens.length &&
     x.tokens.every(token => token !== null && typeof token === 'object' && parseTokenDescriptor({
       token_id: token.tokenId, ticker: token.ticker, full_name: token.name,
       decimal_point: token.decimals, current_supply: token.currentSupplyAtomic,
       total_max_supply: token.maximumSupplyAtomic, owner: token.owner,
-    }) !== null) && typeof x.warning === 'string' &&
+    }) !== null && token.tokenId === token.tokenId.toLowerCase()) && typeof x.warning === 'string' &&
     typeof x.obtainedAt === 'string' && !Number.isNaN(Date.parse(x.obtainedAt)) &&
     Number.isSafeInteger(x.offset) && Number(x.offset) >= 0
 }
