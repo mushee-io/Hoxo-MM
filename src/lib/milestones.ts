@@ -31,7 +31,7 @@ export const MILESTONES: readonly Milestone[] = Object.freeze([
   { number: 18, title: 'Perpetuals matching and margin', state: 'blocked', evidence: 'Browser positions and integer-only research risk calculator', nextGate: 'Audited margin escrow, price/funding feeds and forced liquidation' },
   { number: 19, title: 'Cross-chain settlement routing', state: 'blocked', evidence: 'Pure local two-hop route preview and documented bridge trust matrix', nextGate: 'Verified deployed adapters, chain receipts and refund/timeout model' },
   { number: 20, title: 'External audits and operational launch', state: 'partial', evidence: 'CI test/build, security docs, explicit research preview and release gates', nextGate: 'Independent audits, incident response exercises and protocol-level enforcement' },
-].map(m => Object.freeze(m)))
+].map(m => Object.freeze(m as Milestone)))
 
 export function milestoneOverview() {
   const completed = MILESTONES.filter(x => x.state === 'implemented').length
