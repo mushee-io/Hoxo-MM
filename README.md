@@ -1,6 +1,6 @@
 # HOXO — Privacy Runs Deep
 
-[**20-milestone implementation and blockers**](docs/MILESTONES_02_20.md) · [**Architecture audit**](docs/MILESTONE_01_ARCHITECTURE.md)
+[**20-milestone implementation and blockers**](docs/MILESTONES_02_20.md) · [**Architecture audit**](docs/MILESTONE_01_ARCHITECTURE.md) · [**Milestones 4–8 testnet acceptance**](docs/M04_M08_TESTNET_ACCEPTANCE.md)
 
 **Beldex DeFi research prototype** · Swap · Perps · Lend · Routes · Safety · Launch readiness
 
