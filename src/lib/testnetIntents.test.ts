@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTestnetIntent, verifyIntentAssociation, type SignedTestnetIntent } from './testnetIntents'
+import { buildTestnetIntent, parseResearchIntent, verifyIntentAssociation, type SignedTestnetIntent } from './testnetIntents'
 
 const account = 'bx' + '1'.repeat(93)
 const nonce = '12345678-1234-4321-1234-123456789abc'
@@ -41,5 +41,42 @@ describe('Testnet swap and lending wallet signatures (no real settlement)', () =
     expect(verifyIntentAssociation({ ...signed('swap', message), verified: false as true }, account, now + 1)).toBe(false)
     expect(verifyIntentAssociation(signed('swap', message), account, now - 1)).toBe(false)
     expect(() => buildTestnetIntent('fake', { kind: 'swap', amount: '0.1', desiredAsset: 'PRIVACY_TOKEN' }, nonce, now)).toThrow()
+  })
+})
+
+
+describe('M11 canonical signing-envelope integrity', () => {
+  const signed = (message: string): SignedTestnetIntent => ({
+    kind: 'swap', message, signature: 'wallet-approved-signature', verified: true,
+    walletAddress: account, issuedAt: now,
+  })
+  const original = buildTestnetIntent(account, { kind: 'swap', amount: '0.25', desiredAsset: 'PRIVACY_TOKEN' }, nonce, now)
+  it('rejects injected, duplicated, reordered or extra intent fields', async () => {
+    const { parseResearchIntent } = await import('./testnetIntents')
+    expect(parseResearchIntent(original)?.bdxAtomic).toBe(250_000_000n)
+    const mutated = [
+      original.replace('desired=PRIVACY_TOKEN', 'desired=BDX'),
+      original.replace('bdxAtomic=250000000', 'bdxAtomic=000250000000'),
+      original.replace('bdxAtomic=250000000', 'bdxAtomic=6000000000'),
+      original.replace('expires=' + (now + 300_000), 'expires=' + (now + 600_000)),
+      original.replace('chain=beldex-testnet', 'chain=beldex-mainnet'),
+      original + ' wallet=' + account,
+      original.replace('desired=PRIVACY_TOKEN', 'desired=PRIVACY_TOKEN desired=FAKE'),
+      original.replace('nonce=' + nonce, 'nonce=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'),
+      original.replace('kind=swap', 'kind=lend'),
+      original.replace('bdxAtomic=250000000', 'bdxAtomic=250000000=0'),
+    ]
+    for (const message of mutated) {
+      expect(parseResearchIntent(message)).toBeNull()
+      expect(verifyIntentAssociation(signed(message), account, now + 1)).toBe(false)
+    }
+  })
+  it('rejects expired, missing or unrelated proof and preserves canonical lending intent', async () => {
+    const { parseResearchIntent } = await import('./testnetIntents')
+    const loan = buildTestnetIntent(account, { kind: 'lend', amount: '0.000000001', aprBps: 0 }, nonce, now)
+    expect(parseResearchIntent(loan)).toMatchObject({ kind: 'lend', bdxAtomic: 1n, aprBps: 0 })
+    expect(verifyIntentAssociation({ ...signed(original), signature: '' }, account, now + 1)).toBe(false)
+    expect(verifyIntentAssociation(signed(original), account, now + 300_001)).toBe(false)
+    expect(parseResearchIntent(null)).toBeNull()
   })
 })
