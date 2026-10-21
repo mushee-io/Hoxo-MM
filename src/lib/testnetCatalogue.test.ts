@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseTokenDescriptor, parseVerifiedPublicTokenLookup,
-  parseTokenList, TOKEN_PAGE_LIMIT,
+  parseTokenList,
 } from './testnetCatalogue'
 
 const id = 'a'.repeat(64)
@@ -52,5 +52,20 @@ describe('published public Beldex testnet token metadata', () => {
     expect(isTokenCatalogue(result)).toBe(true)
     expect(isTokenCatalogue({ ...result, network: 'beldex-mainnet' })).toBe(false)
     expect(isTokenCatalogue({ ...result, tokens: [null] })).toBe(false)
+  })
+  it('validates the public metadata envelope against the requested asset ID', () => {
+    const valid = {
+      network: 'beldex-testnet', source: 'official-wallet-configured-testnet-lws',
+      obtainedAt: '2026-10-21T18:00:00Z',
+      asset: { tokenId: id, ticker: 'HOXO', name: 'Hoxo Test Token', decimals: 9,
+        currentSupplyAtomic: '123456789000', maximumSupplyAtomic: '1000000000000', owner: 'public-testnet-owner' },
+    }
+    expect(parseVerifiedPublicTokenLookup(valid, id)?.ticker).toBe('HOXO')
+    expect(parseVerifiedPublicTokenLookup(valid, id.toUpperCase())?.tokenId).toBe(id)
+    expect(parseVerifiedPublicTokenLookup({ ...valid, network: 'beldex-mainnet' }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, source: 'wallet-portfolio' }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, asset: { ...valid.asset, tokenId: 'b'.repeat(64) } }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, asset: { ...valid.asset, currentSupplyAtomic: 'NaN' } }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, obtainedAt: 'not-a-date' }, id)).toBeNull()
   })
 })
