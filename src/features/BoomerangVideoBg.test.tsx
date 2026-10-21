@@ -9,7 +9,7 @@ describe('Boomerang live-video capture and canvas playback', () => {
   it('references the exact video, one forward play, and distinct hidden canvas', () => {
     const html = renderToStaticMarkup(<BoomerangVideoBg/>)
     expect(BOOMERANG_VIDEO_URL).toBe('https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260715_090628_7052d8a6-a094-4341-a4a2-ad58493a67a9.mp4')
-    expect(html).toContain('crossOrigin="anonymous"')
+    expect(html).toContain('crossorigin="anonymous"')
     expect(html.toLowerCase()).toContain('playsinline=""')
     expect(html).toContain('preload="auto"')
     expect(html).toContain('muted=""')
