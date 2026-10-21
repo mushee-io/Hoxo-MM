@@ -13,7 +13,7 @@ describe('M9–M17 research UI integration (no live wallet or SDK call)', () => 
   it('displays an explicit spot execution blocker', () => {
     const html=renderToString(<SpotResearchLab/>)
     expect(html).toContain('SWAP EXECUTION BLOCKED')
-    expect(html).toContain('SIMULATION')
+    expect(html).toContain('simulate hypothetical')
     expect(html).toContain('atomic')
   })
   it('renders vault research separately from any actual account balance', () => {
