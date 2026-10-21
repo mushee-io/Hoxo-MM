@@ -17,6 +17,7 @@ import { accrueDemoInterest, projectDemoInterest, YEAR_MS } from './lib/interest
 import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetIntentPanel } from './features/TestnetIntents'
+import { SpotResearchLab, LendingResearchLab } from './features/ProtocolLabs'
 import { TestnetAssetCatalogue } from './features/TestnetAssets'
 import { privateAssetMethodReadiness } from './lib/privacyCapabilities'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
@@ -175,6 +176,7 @@ function Swap({ demo, onSwap, wallet }: { demo: DemoState; wallet: ReturnType<ty
     </div>
     <TestnetAssetCatalogue purpose="swap"/>
     <TestnetIntentPanel kind="swap" wallet={wallet}/>
+    <SpotResearchLab/>
   </div>
 }
 
@@ -280,6 +282,7 @@ function Lend({ demo, onAction, onAccrue, wallet }: { demo: DemoState; wallet: R
     <div className="panel"><CardTitle>Your demo lending positions</CardTitle><div className="positions-grid"><div><span className="eyebrow">SUPPLIED</span>{assetSymbols.filter(a => (demo.lending.supplied[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.supplied[a] ?? 0)} <small>{money((demo.lending.supplied[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.supplied) === 0 && <p className="muted">No assets supplied yet.</p>}</div><div><span className="eyebrow">BORROWED</span>{assetSymbols.filter(a => (demo.lending.borrowed[a] ?? 0) > 0).map(a => <div key={a} className="holding-line"><span><Coin symbol={a} size="sm"/><b>{a}</b></span><strong>{displayNumber(demo.lending.borrowed[a] ?? 0)} <small>{money((demo.lending.borrowed[a] ?? 0) * priceOf(a))}</small></strong></div>)}{totalValue(demo.lending.borrowed) === 0 && <p className="muted">No outstanding demo debt.</p>}</div></div></div>
     <TestnetAssetCatalogue purpose="lend"/>
     <TestnetIntentPanel kind="lend" wallet={wallet}/>
+    <LendingResearchLab/>
   </div>
 }
 

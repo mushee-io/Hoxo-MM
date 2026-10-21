@@ -8,6 +8,7 @@ import { MILESTONES, milestoneOverview } from '../lib/milestones'
 import { CAPABILITY_CATALOGUE, capabilityAvailability, type CapabilityContext } from '../lib/capabilities'
 import { estimateDemoEconomics } from '../lib/economics'
 import { TestnetAssetCatalogue } from './TestnetAssets'
+import { TokenIntegrationLab } from './ProtocolLabs'
 import { type DemoState } from '../lib/demo'
 
 export function RoutesPage({ demo, policy, onExecute }: {
@@ -146,6 +147,7 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer, wallet
       </tbody></table></div>
     </section>
     <TestnetAssetCatalogue purpose="launch"/>
+    <TokenIntegrationLab/>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>
         {READINESS_GATES.map(g => <tr key={g.id}><td>{g.area}</td><td><b>{g.label}</b></td><td>{g.state === 'blocked' ? <span className="side-pill short">BLOCKED</span> : <span className="side-pill neutral">PROTOTYPE</span>}</td><td className="readiness-requirement">{g.requirement}</td></tr>)}
