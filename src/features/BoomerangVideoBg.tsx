@@ -108,7 +108,7 @@ export function BoomerangVideoBg() {
       const context = display.getContext('2d')
       if (!context) return
       let frameIndex = 0
-      let direction = 1
+      let direction: 1 | -1 = 1
       context.drawImage(frames[frameIndex], 0, 0)
       setCanvasVisible(true)
       intervalId = window.setInterval(() => {
