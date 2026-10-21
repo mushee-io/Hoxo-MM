@@ -4,6 +4,7 @@ import { assetSymbols, displayNumber, money, priceOf, type Asset } from '../lib/
 import { CHAINS, findDemoRoutes, MAX_DEMO_TRADE_USD, type ChainId, type RoutePlan } from '../lib/routes'
 import { POLICY, type DemoPolicyState, LIVE_SETTLEMENT_ENABLED } from '../lib/security'
 import { productionReadiness, READINESS_GATES } from '../lib/readiness'
+import { CAPABILITY_CATALOGUE, capabilityAvailability, type CapabilityContext } from '../lib/capabilities'
 import { estimateDemoEconomics } from '../lib/economics'
 import { TestnetAssetCatalogue } from './TestnetAssets'
 import { type DemoState } from '../lib/demo'
@@ -92,12 +93,18 @@ export function SecurityPage({ policy, poolFeesUsd, onPause }: { policy: DemoPol
   </div>
 }
 
-export function LaunchPage({ walletNetwork, walletHeight, walletTransfer }: {
+export function LaunchPage({ walletNetwork, walletHeight, walletTransfer, walletBalanceAtomic, walletBalanceApproximate }: {
   walletNetwork: string | null
   walletHeight: number | null
   walletTransfer: string | null
+  walletBalanceAtomic: bigint | null
+  walletBalanceApproximate: boolean
 }) {
   const state = productionReadiness()
+  const context: CapabilityContext = {
+    network: walletNetwork, walletConnected: walletNetwork !== null,
+    unlockedAtomic: walletBalanceAtomic, approximateBalance: walletBalanceApproximate,
+  }
   return <div className="stack">
     <div className="section-header"><div><div className="eyebrow">MILESTONE 07 / RELEASE READINESS</div><h1>Launch readiness</h1><p>Track what is in the functioning prototype and what still blocks mainnet financial products.</p></div><span className="subtle-pill">MAINNET BLOCKED</span></div>
     <div className="metrics-grid three">
@@ -115,6 +122,21 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer }: {
       <p className="muted smaller">Live wallet connection uses the official Beldex SDK. Wallet scan height and wallet-returned hashes are not independent proof that a particular transaction reached finality. Swap settlement, lending contracts and private-asset transfer remain unavailable.</p>
       <p className="muted smaller">The release dashboard is operational on testnet as a readiness viewer; it does not deploy contracts or unlock exchange functionality.</p>
     </div>
+    <section className="panel">
+      <div className="card-heading"><h3>M1 / Runtime execution capabilities</h3><span className="subtle-pill">FAIL CLOSED</span></div>
+      <p className="muted smaller">Capability status is sourced from the enforced execution boundary. A wallet-supported BDX transfer still needs user approval and funded two-wallet test evidence; browser simulations cannot become real trades.</p>
+      <div className="table-scroll"><table className="data-table"><thead><tr><th>Feature</th><th>Capability class</th><th>Availability</th><th>Trust boundary / blocker</th></tr></thead><tbody>
+        {CAPABILITY_CATALOGUE.map(cap => {
+          const available = capabilityAvailability(cap.id, context)
+          return <tr key={cap.id}>
+            <td><b>{cap.label}</b></td>
+            <td>{cap.state === 'testnet-wallet' ? 'SDK testnet transfer' : cap.state === 'signed-proposal' ? 'Off-chain signature' : cap.state}</td>
+            <td><span className={'side-pill ' + (available.available ? 'neutral' : 'short')}>{available.available ? 'SUPPORTED PATH' : 'UNAVAILABLE'}</span></td>
+            <td className="readiness-requirement">{available.explanation}</td>
+          </tr>
+        })}
+      </tbody></table></div>
+    </section>
     <TestnetAssetCatalogue purpose="launch"/>
     <div className="panel"><div className="card-heading"><h3>Release gate checklist</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
       <div className="table-scroll"><table className="data-table"><thead><tr><th>Area</th><th>Gate</th><th>State</th><th>Required work</th></tr></thead><tbody>

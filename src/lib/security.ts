@@ -1,4 +1,5 @@
 import { validAmount } from './markets'
+import { assertDemoCapability } from './capabilities'
 
 /** Browser-only simulation guardrails. These are not server-side or on-chain controls. */
 export const POLICY = Object.freeze({
@@ -23,6 +24,7 @@ export function assertDemoOperation(
   usdValue: number,
   leverage?: number,
 ): void {
+  assertDemoCapability(action)
   if (!Number.isFinite(usdValue) || usdValue < 0) throw new Error('Invalid order or collateral value')
   // Always permit risk-reducing actions during a simulated pause. Do not lock
   // users out of closing positions or repaying debt.
