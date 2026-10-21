@@ -5,7 +5,7 @@ const now = 1_797_100_000_000
 const input = {
   network: 'beldex-testnet',
   quoteId: '12345678-1234-4321-1234-123456789abc',
-  makerLabel: 'TEST MAKER (unverified)',
+  makerLabel: 'TEST MAKER unverified',
   fromAssetId: 'a'.repeat(64),
   toAssetId: 'b'.repeat(64),
   amountInAtomic: '10000000',
