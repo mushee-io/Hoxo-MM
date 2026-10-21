@@ -43,9 +43,9 @@ This is a continuously *versioned code status*, **not an assertion that all 20 f
 - **M2:** `api/health.ts` provides GET-only HTTP status with a bounded, optional public testnet light-wallet registry probe; distinguishes backend availability from genuine chain functionality.
 - **M6:** Fix token current-supply validation to recognise decimal integers rather than a literal backslash-d pattern.
 - **M12:** `src/lib/researchRfq.ts` validates bounded, exact-unit research RFQ drafts and explicitly refuses execution. It is not a maker integration.
-- **M11:** Signed proposal parsing requires a canonical field order, full bounded values, exact network, fixed expiration, unique fields and consistent wallet address.
+- **M11:** `src/lib/researchOrders.ts` implements an in-memory, replay-rejecting, cancellable and expiring off-chain research order lifecycle. Signed proposal parsing requires a canonical field order, full bounded values, exact network, fixed expiration, unique fields and consistent wallet address.
 - **M15/M17/M18:** `src/lib/riskResearch.ts` implements bounded, exact-integer *research-only* collateral LTV, stale-price rejection and perpetual P&L/margin calculations, with no custody or operator controls.
-- **M20:** CI tests added around new core boundaries, with a visible 20-stage tracker.
+- **M20:** CI now checks high-severity production dependency advisories, plus new tests around core safety boundaries and a visible 20-stage tracker. An audit and CI check do not constitute an independent security review.
 
 ## Release policy
 
