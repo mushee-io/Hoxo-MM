@@ -29,7 +29,6 @@ export type BridgeResearchRoute = Readonly<{
 }>
 const LIMIT = 60_000
 const ID = /^[a-z0-9-]{8,64}$/
-const HEX = /^[0-9a-fA-F]{64}$/
 function validTime(t: number): boolean { return Number.isSafeInteger(t) && t>0 }
 
 /** Only a draft. Explicitly rejects supposed same-network 'bridges'. */
@@ -72,7 +71,7 @@ export function recordBridgeResearchEvidence(
     disputed:[],
   }
   if(!allowed[route.status].includes(next) ||
-    (next!=='disputed' && next!=='timed-out' && now>route.expiresAt) ||
+    (next!=='disputed' && next!=='timed-out' && next!=='refund-evidence-recorded' && now>route.expiresAt) ||
     (next==='timed-out' && now<=route.expiresAt)){
     throw new Error('Invalid, premature or expired bridge research state transition')
   }
