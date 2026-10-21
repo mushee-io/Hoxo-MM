@@ -14,7 +14,10 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
   const testnet = isTestnet(connection?.network)
   let validation = ''
   if (connection?.unlockedAtomic !== null && connection?.unlockedAtomic !== undefined) {
-    try { validateTestnetSend(connection.network, recipient, amount, connection.unlockedAtomic) }
+    try {
+      validateTestnetSend(connection.network, recipient, amount, connection.unlockedAtomic)
+      if (recipient === connection.address) throw new Error('Use a second TESTNET wallet as recipient, not the sending address')
+    }
     catch (e) { validation = e instanceof Error ? e.message : 'Invalid testnet request' }
   } else validation = 'Connect and refresh a Beldex TESTNET wallet to read an available BDX balance'
   const previousUnknown = Boolean(wallet.unresolvedLock) || wallet.transaction?.status === 'unknown'

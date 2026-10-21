@@ -184,7 +184,11 @@ export function useBeldexWallet() {
     if (!wallet || !operationId) { setError('No recoverable wallet operation ID is available'); return }
     try {
       const details = await wallet.getNetwork()
-      if (details.nettype !== 'testnet' || connection?.network !== 'testnet') throw new Error('Status lookup requires the same Beldex TESTNET wallet')
+      const address = await wallet.getAddress()
+      if (details.nettype !== 'testnet' || connection?.network !== 'testnet' ||
+          address !== connection.address || sdk.current !== wallet) {
+        throw new Error('Status lookup requires the original connected Beldex TESTNET account')
+      }
       const result = await wallet.getOperationStatus(operationId)
       if (result.status === 'confirmed') {
         setTransaction({ status: 'broadcast', txHash: result.txHash, fee: fromAtomic(result.fee), operationId, message: 'Wallet confirms the operation. Verify transaction inclusion independently.' })

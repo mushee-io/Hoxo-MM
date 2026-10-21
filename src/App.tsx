@@ -18,6 +18,7 @@ import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetIntentPanel } from './features/TestnetIntents'
 import { TestnetAssetCatalogue } from './features/TestnetAssets'
+import { privateAssetMethodReadiness } from './lib/privacyCapabilities'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
 import { assertDemoOperation, defaultDemoPolicy } from './lib/security'
 
@@ -286,7 +287,7 @@ function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => 
   const health = lendingHealth(demo.lending)
   const portfolioValue = totalValue(demo.balances) + health.collateralUsd - health.debtUsd + demo.positions.reduce((sum, p) => sum + Math.max(0, positionMetrics(p, p.entry).equity), 0)
   return <div className="stack">
-    <SectionHead eyebrow="YOUR HOXO EXPERIENCE" title="Portfolio" description="A transparent view of your local demo assets and activity." accessory={<button className="btn btn-outline" onClick={onReset}><RotateCcw size={15}/> Reset demo</button>}/>
+    <SectionHead eyebrow="YOUR HOXO EXPERIENCE" title="Portfolio" description="Live authorised BDX holdings are shown separately from the local research simulator and public asset bookmarks." accessory={<button className="btn btn-outline" onClick={onReset}><RotateCcw size={15}/> Reset demo</button>}/>
     <section className="panel">
       <CardTitle right={<span className="subtle-pill">{wallet.connection?.network === 'testnet' ? 'BELDEX TESTNET' : 'WALLET SNAPSHOT'}</span>}>Real Beldex wallet portfolio</CardTitle>
       {!wallet.connection ? <>
@@ -302,7 +303,8 @@ function Portfolio({ demo, onReset, wallet }: { demo: DemoState; onReset: () => 
         {wallet.connection.approximate && <p className="negative-text smaller">Balance is approximate until the wallet finishes syncing.</p>}
         <button className="btn btn-outline" onClick={() => void wallet.refresh()}><RefreshCw size={15}/> Refresh real wallet balance</button>
       </>}
-      <p className="muted smaller">Only native BDX is available through the published wallet SDK. The BTC, ETH and USDT demo balances below are not holdings in your wallet.</p>
+      <p className="muted smaller">Only native BDX can currently be read through the published wallet SDK. BTC, ETH and USDT demo balances below are not holdings in your wallet.</p>
+      <div className="privacy-box" style={{ marginTop: 14 }}><LockKeyhole size={17}/><div><b>Privacy Token wallet balance: {privateAssetMethodReadiness().privateAssetBalance ? 'SUPPORTED' : 'NOT EXPOSED BY SDK'}</b><p>Real private token holdings cannot be displayed without an official wallet-authorised asset-balance method. Public token bookmarks below are not owned assets, balances or liquidity. Never provide your private view key to this website. <a href="https://github.com/mushee-io/Hoxo-MM/issues/3" target="_blank" rel="noreferrer">Upstream integration requirements →</a></p></div></div>
       {wallet.transaction && <div className="route-result">
         <div className="route-result-title"><b>Latest wallet send: {wallet.transaction.status}</b><span className="subtle-pill">BDX TESTNET</span></div>
         {wallet.transaction.txHash && <p className="muted smaller" style={{ overflowWrap: 'anywhere' }}>Wallet-reported hash: {wallet.transaction.txHash} · <a href={"https://testnet.beldex.dev/tx/" + encodeURIComponent(wallet.transaction.txHash)} target="_blank" rel="noreferrer">Open testnet explorer <ExternalLink size={12}/></a></p>}
