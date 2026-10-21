@@ -62,7 +62,7 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [offset, revision])
-  const heading = purpose === 'swap' ? 'Beldex testnet Privacy Token markets'
+  const heading = purpose === 'swap' ? 'Beldex testnet public Privacy Token catalogue'
     : purpose === 'lend' ? 'Beldex testnet collateral asset discovery'
     : purpose === 'portfolio' ? 'Public Beldex testnet asset catalogue'
     : 'Network asset registry status'

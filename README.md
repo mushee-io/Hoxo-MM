@@ -1,12 +1,14 @@
+**User-facing change (21 October 2026): The app now uses only genuine Beldex wallet/testnet functionality and fail-closed financial integration pages. Previously available browser simulations have been removed from the running product. The real DeFi protocols have not been deployed.**
+
 # HOXO — Privacy Runs Deep
 
 [**20-milestone implementation and blockers**](docs/MILESTONES_02_20.md) · [**Architecture audit**](docs/MILESTONE_01_ARCHITECTURE.md) · [**Milestones 4–8 testnet acceptance**](docs/M04_M08_TESTNET_ACCEPTANCE.md) · [**Milestones 9–17 protocol acceptance**](docs/M09_M17_PROTOCOL_ACCEPTANCE.md) · [**M18–20 checkbox acceptance**](docs/M18_M20_FINAL_CHECKLIST.md) · [**All 20 milestone crossboxes**](docs/MILESTONES_02_20.md)
 
-**Beldex DeFi research prototype** · Swap · Perps · Lend · Routes · Safety · Launch readiness
+**Beldex wallet integration app** · Native TESTNET BDX · Public token registry · Protocol readiness
 
-HOXO is a Bluefin-inspired interface for privacy-native decentralised finance, being developed for the Beldex ecosystem. **The Testnet tab additionally supports a real, wallet-approved native BDX transfer on Beldex TESTNET; this is separate from all simulated DeFi actions.** The repository now provides the **Milestones 1–7 prototype workstreams**. This means UI, simulation engines, integration research, operational controls, deployment hardening and release criteria — **not** seven production-grade mainnet protocols.
+HOXO is a Bluefin-inspired interface for privacy-native decentralised finance, being developed for the Beldex ecosystem. **The Testnet tab additionally supports a real, wallet-approved native BDX transfer on Beldex TESTNET; this is separate from all simulated DeFi actions.** The deployed app does not load a simulated balance or trading environment. Source-controlled research modules and their safety tests remain in the repository but are not accessible as financial trading actions.
 
-> **IMPORTANT:** Only explicit, user-approved **native testnet BDX sends** can broadcast an actual transaction. Signed Swap and Lend proposals are **wallet signatures only**; they never exchange assets, provide loans, or settle on-chain. No real token exchange, Privacy Token transfer/issuance, leveraged trade, loan, custody, collateral settlement, yield accrual or bridge transaction is performed. All balances, pools, rates and prices in the trading UI are illustrative local browser data. The separate Beldex Extension Wallet connection can read authorised BDX account information but is never used to execute trades.
+> **IMPORTANT:** Only explicit, user-approved **native testnet BDX sends** can broadcast an actual transaction. Signed Swap and Lend proposals are **wallet signatures only**; they never exchange assets, provide loans, or settle on-chain. No real token exchange, Privacy Token transfer/issuance, leveraged trade, loan, custody, collateral settlement, yield accrual or bridge transaction is performed. No synthetic balances, market charts, order fills, lending APYs, virtual positions or pretend financial settlement are displayed in the app. Beldex Extension Wallet native BDX actions remain separate and explicitly user-approved.
 
 ## Quick start
 
