@@ -11,7 +11,7 @@ type Wallet=ReturnType<typeof useBeldexWallet>
 export function LiveSecurityPage(){
   const state=productionReadiness()
   const allSettlementMethodsBlocked=CAPABILITY_CATALOGUE.filter(x=>x.operation==='settlement').every(x=>x.state==='blocked')
-  return <div className="stack">
+  return <div className="stack" data-section="security">
     <div className="section-header"><div><div className="eyebrow">SECURITY</div><h1>Execution controls</h1>
       <p>Financial execution is restricted at the capability boundary, not by a cosmetic toggle.</p></div>
       <span className="subtle-pill">FINANCIAL SETTLEMENT OFF</span></div>
@@ -35,7 +35,7 @@ export function LiveLaunchPage({wallet}: {wallet:Wallet}){
   const state=productionReadiness()
   const ctx={network:connection?.network??null,walletConnected:!!connection,
     unlockedAtomic:connection?.unlockedAtomic??null,approximateBalance:connection?.approximate??true}
-  return <div className="stack">
+  return <div className="stack" data-section="launch">
     <div className="section-header"><div><div className="eyebrow">DEVELOPMENT AND ACCEPTANCE</div><h1>Launch readiness</h1>
       <p>Review independently verifiable integration work and outstanding security requirements. No simulated financial services are accessible.</p></div>
       <span className="subtle-pill">PRODUCTION FINANCE BLOCKED</span></div>

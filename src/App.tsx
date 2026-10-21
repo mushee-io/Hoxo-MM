@@ -25,7 +25,7 @@ function pathFor(page: LivePage): string {
 }
 function LivePortfolio({wallet}: {wallet: ReturnType<typeof useBeldexWallet>}) {
   const {connection}=wallet
-  return <div className="stack">
+  return <div className="stack" data-section="portfolio">
     <div className="section-header"><div><div className="eyebrow">BELDEX EXTENSION WALLET</div><h1>Portfolio</h1>
       <p>Only balances authorised and returned by your connected Beldex wallet are displayed. No invented holdings or prices.</p></div>
       <span className="subtle-pill">WALLET DATA ONLY</span></div>
@@ -51,7 +51,7 @@ function Overview({wallet,openPage}:{
   wallet:ReturnType<typeof useBeldexWallet>,openPage:(page:LivePage)=>void
 }) {
   const connection=wallet.connection
-  return <div className="stack">
+  return <div className="stack" data-section="overview">
     <div className="hero">
       <div className="hero-grid" aria-hidden="true"/><div className="hero-halo" aria-hidden="true"/>
       <div className="hero-content">
