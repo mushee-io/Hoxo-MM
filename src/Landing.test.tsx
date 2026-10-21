@@ -28,8 +28,8 @@ describe('Halo / USD Halo premium marketing homepage', () => {
   it('has the two source video URLs, autoplay and mobile-safe playback', () => {
     expect(home).toContain('hf_20260423_161253_c72b1869-400f-45ed-ac0c-52f68c2ed5bd.mp4')
     expect(home).toContain('hf_20260423_183428_ab5e672a-f608-4dcb-b319-f3e040f02e2d.mp4')
-    expect((home.match(/autoplay=""/g)??[]).length).toBe(2)
-    expect((home.match(/playsinline=""/g)??[]).length).toBe(2)
+    expect((home.match(/autoplay=""/gi)??[]).length).toBe(2)
+    expect((home.match(/playsinline=""/gi)??[]).length).toBe(2)
     expect((home.match(/muted=""/g)??[]).length).toBe(2)
   })
   it('duplicates brand marquees, uses CSS animation and discloses brand-use limitations', () => {
