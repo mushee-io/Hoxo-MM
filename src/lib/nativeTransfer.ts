@@ -33,6 +33,8 @@ export async function executeOneApprovedTestnetSend(
   })
   if (balance.approximate) throw new Error('Wait for a fully synced wallet balance before sending')
   const { atomic, to } = validateTestnetSend(details.nettype, request.recipient, request.displayAmount, balance.unlocked)
+  // Accidental same-wallet recipient mistakes have no independent beneficiary.
+  if (to === address) throw new Error('Sender and recipient are the same testnet wallet; use a second wallet')
   // Write persistent lock BEFORE invoking the wallet. Storage failure must
   // prohibit the transfer. No automatic resend on an uncertain outcome.
   saveTransferLock(storage, key, now)

@@ -51,6 +51,11 @@ describe('real testnet BDX adapter — mock wallet, no live funds', () => {
       expect(item.send).not.toHaveBeenCalled()
     }
   })
+  it('rejects accidentally using the same account as recipient before wallet approval', async () => {
+    const { wallet, send } = mockWallet()
+    await expect(executeOneApprovedTestnetSend(wallet, storage(), { ...request, recipient: address }, key, 1797000000000)).rejects.toThrow(/same testnet wallet/)
+    expect(send).not.toHaveBeenCalled()
+  })
   it('rejects previously unresolved requests without querying or resending', async () => {
     const s = storage()
     const { wallet, send } = mockWallet()

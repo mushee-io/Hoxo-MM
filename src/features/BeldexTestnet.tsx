@@ -55,7 +55,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
             <input type="text" inputMode="decimal" value={amount} onChange={e => { setAmount(e.target.value); setAcknowledged(false) }} placeholder="0.1"/>
           </label>
         </div>
-        <p className="muted smaller">Safety cap: {MAX_TESTNET_SEND_BDX} test BDX per wallet approval. Network fees are additional, so leave test BDX available for fees.</p>
+        <p className="muted smaller">Safety cap: {MAX_TESTNET_SEND_BDX} test BDX per wallet approval. Leave at least 0.01 test BDX unspent as a preliminary fee buffer. The wallet may charge a higher network fee.</p>
         {connection && validation && <p className="negative-text smaller">{validation}</p>}
         <label style={{ display: 'flex', gap: 10, alignItems: 'start', fontSize: 12, lineHeight: 1.5, margin: '18px 0' }}>
           <input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} style={{ marginTop: 4 }}/>
