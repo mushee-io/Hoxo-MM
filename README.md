@@ -1,5 +1,7 @@
 # HOXO — Privacy Runs Deep
 
+[**20-milestone implementation and blockers**](docs/MILESTONES_02_20.md) · [**Architecture audit**](docs/MILESTONE_01_ARCHITECTURE.md)
+
 **Beldex DeFi research prototype** · Swap · Perps · Lend · Routes · Safety · Launch readiness
 
 HOXO is a Bluefin-inspired interface for privacy-native decentralised finance, being developed for the Beldex ecosystem. **The Testnet tab additionally supports a real, wallet-approved native BDX transfer on Beldex TESTNET; this is separate from all simulated DeFi actions.** The repository now provides the **Milestones 1–7 prototype workstreams**. This means UI, simulation engines, integration research, operational controls, deployment hardening and release criteria — **not** seven production-grade mainnet protocols.
