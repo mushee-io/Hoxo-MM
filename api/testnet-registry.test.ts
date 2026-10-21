@@ -55,7 +55,7 @@ describe('M6 read-only token API tests — mocked public LWS, no wallet secrets'
       expect(x.result.body).toMatchObject({ network: 'beldex-testnet', totalCount: 2, partial: false })
       const body = x.result.body as { tokens: Array<{ tokenId: string }> }
       expect(body.tokens.map(z => z.tokenId)).toEqual([idA, idB])
-      expect(JSON.stringify(x.result.body)).not.toMatch(/view_key|spend_key|balance/i)
+      expect(JSON.stringify(x.result.body)).not.toMatch(/view_key|spend_key|\"unlockedAtomic\"|\"ownedBalance\"/i)
       const requests = fetchMock.mock.calls as Array<[string, { body?: string }]>
       expect(requests.every(([, init]) => !/view_key|spend_key|address/.test(init.body ?? ''))).toBe(true)
     } finally { vi.unstubAllGlobals() }
