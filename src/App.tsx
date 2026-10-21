@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
-  ArrowLeftRight, ArrowRight, BarChart3, CheckCircle2, CircleAlert, Coins,
+  ArrowLeftRight, ArrowRight, BarChart3, CheckCircle2, CircleAlert,
   Copy, ExternalLink, Landmark, LayoutDashboard, LockKeyhole, Menu, RefreshCw,
-  ShieldCheck, Wallet, X, Zap
+  ShieldCheck, Wallet, Zap
 } from 'lucide-react'
 import Landing from './Landing'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
@@ -101,8 +101,8 @@ export default function App(){
   }
   if(page===null)return <Landing onEnter={go}/>
   return <div className="app-shell">
-    <aside className={'sidebar '+(menuOpen?'open':'')}>
-      <div className="sidebar-brand"><span className="logo-shape"><span>H</span></span>
+    <aside className={'sidebar '+(menuOpen?'sidebar-open':'')}>
+      <div className="sidebar-brand"><div className="logo-shape"><span>H</span></div>
         <div className="brand-name">HOXO<span className="brand-dot">.</span><small>ON BELDEX</small></div>
       </div>
       <p className="nav-label">WALLET AND PROTOCOL</p>
@@ -118,11 +118,11 @@ export default function App(){
         <a href="https://github.com/mushee-io/Hoxo-MM" target="_blank" rel="noreferrer" className="muted smaller">Source and security notes <ExternalLink size={12}/></a>
       </div>
     </aside>
-    {menuOpen&&<button className="live-menu-overlay" aria-label="Close navigation" onClick={()=>setMenuOpen(false)}/>}
-    <div className="app-main">
+    {menuOpen&&<button className="mobile-scrim" aria-label="Close navigation" onClick={()=>setMenuOpen(false)}/>}
+    <div className="main-area">
       <header className="topbar">
         <div className="topbar-left">
-          <button className="live-mobile-nav" title="Menu" aria-label="Open navigation" onClick={()=>setMenuOpen(x=>!x)}><Menu size={20}/></button>
+          <button className="menu-toggle" title="Menu" aria-label="Open navigation" onClick={()=>setMenuOpen(x=>!x)}><Menu size={20}/></button>
           <span className="muted smaller">HOXO / {page}</span>
         </div>
         <div className="topbar-right">

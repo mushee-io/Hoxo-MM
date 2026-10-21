@@ -305,3 +305,11 @@ nav{display:grid;gap:5px}
 .crossboxes-item:focus-within{border-color:#91ead3}
 @media(max-width:1050px){.crossboxes-list{grid-template-columns:1fr}}
 @media(max-width:600px){.crossboxes-status{gap:12px}.crossboxes-title{flex-wrap:wrap}.crossboxes-item{padding:13px}}
+
+
+/* Beldex integration-only terminal: no fictional balances or local trading controls. */
+.live-safety-strip{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;margin-bottom:23px;background:#12262b;border:1px solid #254949;border-radius:10px;color:#b3d5cf;font-size:12px;line-height:1.55}
+.live-safety-strip svg{flex:0 0 auto;color:#91ead3;margin-top:1px}
+.live-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.live-product-grid .product-tile{min-width:0}
+@media(max-width:800px){.live-product-grid{grid-template-columns:1fr}}

@@ -9,7 +9,7 @@ export type ReadinessGate = {
 }
 export const READINESS_GATES: ReadonlyArray<ReadinessGate> = [
   { id: 'wallet', area: 'Integration', label: 'Beldex wallet and TESTNET BDX', state: 'prototype', requirement: 'Read-only wallet and native wallet-approved TESTNET send are coded; manual funded two-wallet E2E and Privacy Token API remain outstanding' },
-  { id: 'routing', area: 'Integration', label: 'Swap and routing', state: 'prototype', requirement: 'Only browser-local swaps and simulated multi-hop quotes exist' },
+  { id: 'routing', area: 'Integration', label: 'Swap and routing', state: 'prototype', requirement: 'Swap and bridge settlement are not connected to real liquidity or reviewed chain adapters; the frontend provides no execution controls' },
   { id: 'perps', area: 'Settlement', label: 'Perpetual risk and execution', state: 'blocked', requirement: 'On-chain settlement, oracle validation, escrow and liquidation keepers must be developed and audited' },
   { id: 'lending', area: 'Settlement', label: 'Lending markets', state: 'blocked', requirement: 'Enforceable contracts, liquidity, interest indexes and collateral liquidation are missing' },
   { id: 'bridges', area: 'Integration', label: 'Cross-chain bridge adapters', state: 'blocked', requirement: 'Deployments, allowlists, trust assumptions, exact addresses and integration tests are unverified' },

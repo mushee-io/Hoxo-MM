@@ -8,11 +8,11 @@ type Props = {
 }
 
 const products = [
-  { name: 'Swap', subtitle: 'Trade privately, by design', description: 'Explore token exchange and quotes with the HOXO swap simulator.', icon: ArrowLeftRight, destination: 'Swap' as const, className: 'swap' },
-  { name: 'Lend', subtitle: 'Put assets to work', description: 'Explore collateral, borrowing and interest models in a demo market.', icon: Landmark, destination: 'Lend' as const, className: 'lend' },
-  { name: 'Perps', subtitle: 'A sharper trading edge', description: 'Test long and short strategies in a risk-aware derivatives simulator.', icon: BarChart3, destination: 'Perps' as const, className: 'perps' },
+  { name: 'Swap', subtitle: 'Token exchange integration', description: 'Inspect supported Beldex testnet assets. Real swaps are unavailable until verified settlement is deployed.', icon: ArrowLeftRight, destination: 'Swap' as const, className: 'swap' },
+  { name: 'Lend', subtitle: 'Lending integration', description: 'Beldex lending requires audited collateral custody and real loan settlement. Not available yet.', icon: Landmark, destination: 'Lend' as const, className: 'lend' },
+  { name: 'Perps', subtitle: 'Perpetuals integration', description: 'Perpetual trading requires verified margin custody and liquidation. Not available yet.', icon: BarChart3, destination: 'Perps' as const, className: 'perps' },
   { name: 'Launch', subtitle: 'Build the ecosystem', description: 'Explore Beldex testnet asset discovery and integration readiness.', icon: Zap, destination: 'Launch' as const, className: 'launch' },
-  { name: 'Portfolio', subtitle: 'Everything in one view', description: 'View your wallet-authorised BDX balance, separately from demo assets.', icon: Wallet, destination: 'Portfolio' as const, className: 'portfolio' },
+  { name: 'Portfolio', subtitle: 'Everything in one view', description: 'View native BDX amounts returned by your connected Beldex wallet.', icon: Wallet, destination: 'Portfolio' as const, className: 'portfolio' },
 ]
 
 export default function Landing({ onEnter }: Props) {
@@ -45,7 +45,7 @@ export default function Landing({ onEnter }: Props) {
               <button type="button" className="landing-primary-btn" onClick={() => onEnter('Overview')}>Enter HOXO App <ArrowUpRight size={19}/></button>
               <a className="landing-outline-btn" href="#ecosystem">Explore ecosystem <ArrowRight size={18}/></a>
             </div>
-            <div className="landing-hero-status"><ShieldCheck size={15}/><span>Research preview</span><i/> <span>Native BDX testnet transfers available</span></div>
+            <div className="landing-hero-status"><ShieldCheck size={15}/><span>Beldex wallet integration</span><i/> <span>Native BDX testnet transfers available</span></div>
           </div>
           <div className="landing-visual" aria-label="Illustration of the HOXO DeFi workspace">
             <div className="landing-orbit landing-orbit-one" aria-hidden="true"/>
@@ -60,11 +60,11 @@ export default function Landing({ onEnter }: Props) {
                 <div className="landing-window-title"><span><span className="landing-mini-mark">H</span><b>Your private DeFi gateway</b></span><LockKeyhole size={17}/></div>
                 <p>Choose your destination</p>
                 <div className="landing-window-items">
-                  <button type="button" onClick={() => onEnter('Swap')}><span className="landing-window-icon teal"><ArrowLeftRight size={21}/></span><span><strong>Swap</strong><small>Explore asset exchange</small></span><ChevronRight size={18}/></button>
-                  <button type="button" onClick={() => onEnter('Lend')}><span className="landing-window-icon blue"><Landmark size={21}/></span><span><strong>Lend</strong><small>Borrowing &amp; supply models</small></span><ChevronRight size={18}/></button>
-                  <button type="button" onClick={() => onEnter('Perps')}><span className="landing-window-icon purple"><BarChart3 size={21}/></span><span><strong>Perpetuals</strong><small>Simulated long &amp; short</small></span><ChevronRight size={18}/></button>
+                  <button type="button" onClick={() => onEnter('Swap')}><span className="landing-window-icon teal"><ArrowLeftRight size={21}/></span><span><strong>Swap</strong><small>Integration not yet connected</small></span><ChevronRight size={18}/></button>
+                  <button type="button" onClick={() => onEnter('Lend')}><span className="landing-window-icon blue"><Landmark size={21}/></span><span><strong>Lend</strong><small>Lending not yet connected</small></span><ChevronRight size={18}/></button>
+                  <button type="button" onClick={() => onEnter('Perps')}><span className="landing-window-icon purple"><BarChart3 size={21}/></span><span><strong>Perpetuals</strong><small>Trading not yet connected</small></span><ChevronRight size={18}/></button>
                 </div>
-                <div className="landing-window-foot"><ShieldCheck size={15}/><span>Testnet BDX transfers are separate from demo trading.</span></div>
+                <div className="landing-window-foot"><ShieldCheck size={15}/><span>Only native testnet BDX wallet sends are supported; no live exchange or lending.</span></div>
               </div>
             </div>
             <div className="landing-floating-chip landing-chip-top"><span className="landing-floating-icon"><LockKeyhole size={15}/></span> PRIVACY FIRST</div>
@@ -92,7 +92,7 @@ export default function Landing({ onEnter }: Props) {
 
       <section className="landing-approach" id="approach">
         <div className="landing-approach-emblem"><span><LockKeyhole size={35}/></span><div className="landing-approach-ring"/></div>
-        <div className="landing-approach-copy"><div className="landing-eyebrow"><span/> BUILT WITH PRIVACY IN MIND</div><h2>Control your assets.<br/><em>Explore your options.</em></h2><p>HOXO is being built around the Beldex ecosystem. The current release lets you explore our DeFi interfaces and test wallet-approved native BDX transfers on testnet while protocol settlement infrastructure is developed.</p><div className="landing-approach-points"><span><ShieldCheck size={16}/> Beldex ecosystem</span><span><Coins size={16}/> Testnet discovery</span><span><LockKeyhole size={16}/> Clear demo boundaries</span></div></div>
+        <div className="landing-approach-copy"><div className="landing-eyebrow"><span/> BUILT WITH PRIVACY IN MIND</div><h2>Control your assets.<br/><em>Explore your options.</em></h2><p>HOXO is being built around the Beldex ecosystem. The current release connects to the official Beldex wallet for authorised native testnet BDX transfers and public Privacy Token metadata while protocol settlement infrastructure is developed.</p><div className="landing-approach-points"><span><ShieldCheck size={16}/> Beldex ecosystem</span><span><Coins size={16}/> Testnet discovery</span><span><LockKeyhole size={16}/> Supported operations only</span></div></div>
         <button type="button" className="landing-approach-btn" onClick={() => onEnter('Testnet')}>Explore Testnet <ArrowUpRight size={18}/></button>
       </section>
 
@@ -104,6 +104,6 @@ export default function Landing({ onEnter }: Props) {
       </section>
     </main>
 
-    <footer className="landing-footer"><div className="landing-footer-main"><span className="landing-wordmark">HOXO<span className="landing-brand-period">.</span></span><span>Privacy runs deep. Built for the Beldex ecosystem.</span><a href="https://github.com/mushee-io/Hoxo-MM" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13}/></a></div><div className="landing-footer-disclaimer">© 2026 HOXO by Mushee · Research preview. Swap, Perps, Lend and Routes are demonstrations, not live financial products. Only explicitly approved native testnet BDX sends can broadcast actual testnet transfers. No real trades, loans or deposits.</div></footer>
+    <footer className="landing-footer"><div className="landing-footer-main"><span className="landing-wordmark">HOXO<span className="landing-brand-period">.</span></span><span>Privacy runs deep. Built for the Beldex ecosystem.</span><a href="https://github.com/mushee-io/Hoxo-MM" target="_blank" rel="noreferrer">GitHub <ExternalLink size={13}/></a></div><div className="landing-footer-disclaimer">© 2026 HOXO by Mushee · Research preview. Swap, Perps, Lend and Routes are disabled until verified financial settlement exists. Only explicitly approved native testnet BDX sends can broadcast actual testnet transfers. No real trades, loans or deposits.</div></footer>
   </div>
 }
