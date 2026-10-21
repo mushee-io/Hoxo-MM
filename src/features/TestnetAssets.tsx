@@ -30,7 +30,7 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
       const raw = (result as { asset: unknown }).asset
       if (!raw || typeof raw !== 'object') throw new Error('Invalid public token descriptor')
       const asset = raw as PublicPrivacyToken
-      if (asset.tokenId !== id.toLowerCase() || !/^\\d{1,40}$/.test(asset.currentSupplyAtomic) ||
+      if (asset.tokenId !== id.toLowerCase() || !/^\d{1,40}$/.test(asset.currentSupplyAtomic) ||
           !Number.isInteger(asset.decimals) || asset.decimals < 0 || asset.decimals > 18) {
         throw new Error('Token data did not match the requested testnet asset ID')
       }

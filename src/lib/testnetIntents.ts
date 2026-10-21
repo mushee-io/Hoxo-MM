@@ -21,7 +21,7 @@ export type SignedTestnetIntent = {
   issuedAt: number
 }
 const MAX_AMOUNT_ATOMIC = 5_000_000_000n
-const UUID_RE = /^[a-f0-9-]{36}$/
+const UUID_RE = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/
 const ASSET_RE = /^[A-Z][A-Z0-9_]{1,19}$/
 export function buildTestnetIntent(
   walletAddress: string,
@@ -55,16 +55,67 @@ export function buildTestnetIntent(
   if (message.length > 512) throw new Error('Intent exceeds wallet signing limit')
   return message
 }
+
+export type ParsedResearchIntent = Readonly<{
+  kind: TestnetIntentKind
+  wallet: string
+  bdxAtomic: bigint
+  desiredAsset?: string
+  aprBps?: number
+  nonce: string
+  issuedAt: number
+  expiresAt: number
+}>
+
+/**
+ * Strict canonical parser for wallet-approved OFF-CHAIN research messages.
+ * Parsing never verifies a wallet signature and never authorises settlement.
+ * Unknown, duplicate, reordered or injected keys must fail closed.
+ */
+export function parseResearchIntent(message: unknown): ParsedResearchIntent | null {
+  if (typeof message !== 'string' || message.length > 512 || message.length < 60) return null
+  const parts = message.split(' ')
+  if (parts.length !== 9 || parts[0] !== 'hoxo-intent-v1' || parts[1] !== 'chain=beldex-testnet') return null
+  const rawKind = parts[2]
+  if (rawKind !== 'kind=swap' && rawKind !== 'kind=lend') return null
+  const kind: TestnetIntentKind = rawKind === 'kind=swap' ? 'swap' : 'lend'
+  const fieldPrefixes = ['wallet=', 'bdxAtomic=', kind === 'swap' ? 'desired=' : 'aprBps=', 'nonce=', 'iat=', 'expires=']
+  for (let i = 0; i < fieldPrefixes.length; i++) {
+    if (!parts[i + 3].startsWith(fieldPrefixes[i])) return null
+  }
+  const wallet = parts[3].slice('wallet='.length)
+  const atomicText = parts[4].slice('bdxAtomic='.length)
+  const property = parts[5].slice(kind === 'swap' ? 'desired='.length : 'aprBps='.length)
+  const nonce = parts[6].slice('nonce='.length)
+  const iatText = parts[7].slice('iat='.length)
+  const expText = parts[8].slice('expires='.length)
+  if (!checkAddress(wallet).valid || !UUID_RE.test(nonce)) return null
+  if (!/^[1-9]\d{0,9}$/.test(atomicText) ||
+      !/^[1-9]\d{0,15}$/.test(iatText) || !/^[1-9]\d{0,15}$/.test(expText)) return null
+  const atomic = BigInt(atomicText)
+  if (atomic > MAX_AMOUNT_ATOMIC) return null
+  const issuedAt = Number(iatText)
+  const expiresAt = Number(expText)
+  if (!Number.isSafeInteger(issuedAt) || !Number.isSafeInteger(expiresAt) ||
+      expiresAt - issuedAt !== 300_000) return null
+  if (kind === 'swap') {
+    if (!ASSET_RE.test(property) || property === 'BDX') return null
+    return { kind, wallet, bdxAtomic: atomic, desiredAsset: property, nonce, issuedAt, expiresAt }
+  }
+  if (!/^(0|[1-9]\d{0,4})$/.test(property)) return null
+  const aprBps = Number(property)
+  if (aprBps > 10_000) return null
+  return { kind, wallet, bdxAtomic: atomic, aprBps, nonce, issuedAt, expiresAt }
+}
+
 export function verifyIntentAssociation(intent: SignedTestnetIntent, walletAddress: string, now: number): boolean {
-  if (!Number.isSafeInteger(now) || now < 0) return false
-  if (!intent.verified || intent.walletAddress !== walletAddress || !intent.signature) return false
-  const parts = intent.message.split(' ')
-  const fields = Object.fromEntries(parts.slice(1).map(s => s.split('=')))
-  return parts[0] === 'hoxo-intent-v1' &&
-    fields.chain === 'beldex-testnet' &&
-    fields.wallet === walletAddress &&
-    fields.kind === intent.kind &&
-    Number(fields.iat) === intent.issuedAt &&
-    Number.isSafeInteger(Number(fields.expires)) &&
-    now <= Number(fields.expires) && now >= intent.issuedAt
+  if (!Number.isSafeInteger(now) || now <= 0 || !intent.verified ||
+      intent.walletAddress !== walletAddress || !intent.signature ||
+      typeof intent.signature !== 'string') return false
+  const parsed = parseResearchIntent(intent.message)
+  return parsed !== null &&
+    parsed.wallet === walletAddress &&
+    parsed.kind === intent.kind &&
+    parsed.issuedAt === intent.issuedAt &&
+    now >= parsed.issuedAt && now <= parsed.expiresAt
 }
