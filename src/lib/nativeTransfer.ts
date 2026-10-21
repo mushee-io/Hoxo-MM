@@ -1,5 +1,6 @@
 import type { BeldexWeb3 } from '@bdxi/web3js'
 import { validateTestnetSend } from './testnet'
+import { assertCapabilityOperation } from './capabilities'
 import { readTransferLock, saveTransferLock } from './transferSafety'
 
 export type NativeTestnetClient = Pick<BeldexWeb3, 'getNetwork' | 'getAddress' | 'getBalance' | 'sendTransaction'>
@@ -26,6 +27,10 @@ export async function executeOneApprovedTestnetSend(
     throw new Error('Wallet testnet or account changed before sending')
   }
   const balance = await wallet.getBalance()
+  assertCapabilityOperation('wallet-bdx-testnet-send', 'native-testnet-send', {
+    network: details.nettype, walletConnected: true, unlockedAtomic: balance.unlocked,
+    approximateBalance: balance.approximate,
+  })
   if (balance.approximate) throw new Error('Wait for a fully synced wallet balance before sending')
   const { atomic, to } = validateTestnetSend(details.nettype, request.recipient, request.displayAmount, balance.unlocked)
   // Write persistent lock BEFORE invoking the wallet. Storage failure must

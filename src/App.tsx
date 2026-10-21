@@ -446,7 +446,7 @@ export default function App() {
         {page === 'Routes' && <RoutesPage demo={demo} policy={policy} onExecute={handleRoute}/>}
         {page === 'Portfolio' && <Portfolio demo={demo} onReset={reset} wallet={wallet}/>}
         {page === 'Security' && <SecurityPage policy={policy} poolFeesUsd={demo.poolFeesUsd} onPause={() => setPolicy(p => ({ paused: !p.paused }))}/>}
-        {page === 'Launch' && <LaunchPage walletNetwork={wallet.connection?.network ?? null} walletHeight={wallet.connection?.height ?? null} walletTransfer={wallet.transaction?.status ?? null}/>}
+        {page === 'Launch' && <LaunchPage walletNetwork={wallet.connection?.network ?? null} walletHeight={wallet.connection?.height ?? null} walletTransfer={wallet.transaction?.status ?? null} walletBalanceAtomic={wallet.connection?.unlockedAtomic ?? null} walletBalanceApproximate={wallet.connection?.approximate ?? true}/>}
         <footer className="main-footer"><span>© 2026 HOXO. Developed by Mushee.</span><span><LockKeyhole size={13}/> Privacy by design <span className="footer-divider">/</span> Built for Beldex</span></footer>
       </main>
     </div>
