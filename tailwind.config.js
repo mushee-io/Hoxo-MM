@@ -7,7 +7,11 @@ export default {
   theme: {
     extend: {
       colors: { halopage: '#F5F5F5', halonight: '#2B2644' },
-      fontFamily: { sans: ['TT Norms Pro', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        serif: ['P22 Mackinac W01 Book', 'Georgia', 'serif'],
+      },
+      spacing: { 26: '6.5rem' },
       maxWidth: { halo: '88rem' },
     },
   },
