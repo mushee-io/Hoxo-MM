@@ -44,7 +44,7 @@ export const RELEASE_RESEARCH_CHECKS: readonly ResearchChecklistItem[] = Object.
     evidence:'Professional legal review not provided',mode:'external-gate',codeReady:false},
   {id:'m20-release',milestone:20,label:'Production launch authorised with independently confirmed settlement',
     evidence:'Blocked: testnet settlement and external evidence missing',mode:'external-gate',codeReady:false},
-].map(x=>Object.freeze(x)))
+].map(x=>Object.freeze(x as ResearchChecklistItem)))
 
 export const RELEASE_CHECKLIST_STORAGE_KEY='hoxo-m18-m20-personal-review-v1'
 const MANUAL_IDS = new Set(RELEASE_RESEARCH_CHECKS.filter(c=>c.mode==='external-gate').map(c=>c.id))
