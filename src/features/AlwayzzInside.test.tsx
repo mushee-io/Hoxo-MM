@@ -27,7 +27,7 @@ describe('Alwayzz inside app landing hero and interaction controls',()=>{
   })
   it('renders twenty left, twenty right and twenty responsive top decorative arcs',()=>{
     for(const kind of ['left','right','top']){
-      const rx = new RegExp('alwayzz-(?:side-line--)?'+kind+'\\b','g')
+      const rx = new RegExp(kind==='top'?'alwayzz-top-line\\b':'alwayzz-side-line--'+kind+'\\b','g')
       expect((rendered.match(rx)??[]).length).toBe(20)
     }
     expect(rendered).toContain('animation-delay:4.75s')
