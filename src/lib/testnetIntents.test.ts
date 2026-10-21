@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTestnetIntent, parseResearchIntent, verifyIntentAssociation, type SignedTestnetIntent } from './testnetIntents'
+import { buildTestnetIntent, verifyIntentAssociation, type SignedTestnetIntent } from './testnetIntents'
 
 const account = 'bx' + '1'.repeat(93)
 const nonce = '12345678-1234-4321-1234-123456789abc'
