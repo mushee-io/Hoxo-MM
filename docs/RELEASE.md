@@ -40,3 +40,7 @@ Never enable real funds by frontend or environment flag alone. For each product,
 5. **Cross-chain launch:** verified adapters with published bridge trust assumptions and external-chain traceability notices.
 
 See [ROADMAP](ROADMAP.md), [BRIDGE_MATRIX](BRIDGE_MATRIX.md), and [SECURITY_MODEL](SECURITY_MODEL.md).
+
+## M18–20 checklist
+
+[Research implementation and release gates](M18_M20_FINAL_CHECKLIST.md) describe code-evidenced checks and independently outstanding acceptance items. Browser-local self-reported checkboxes cannot enable production or real wallet transactions.

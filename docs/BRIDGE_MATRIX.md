@@ -29,3 +29,7 @@
 Sources:
 - https://beldex.io/blog/privacy-tokens-live-on-beldex-testnet
 - https://www.beldex.io/blog/beldex-stealthex-ama-recap
+
+## M19 trust review
+
+The new bridgeResearch.ts and HOXO Routes panel provide a bounded note-only incident/timeout/refund review. No actual bridge integration has been verified. [M18–20 checklist](M18_M20_FINAL_CHECKLIST.md).
