@@ -61,3 +61,13 @@ npm run build
 ```
 
 The above validates source, not blockchain settlement. Funded two-wallet manual testing and independent review are separate release gates.
+
+## All twenty checkbox view
+
+Under **HOXO → Launch → Milestones 1–20 · Crossboxes**, each workstream displays three separately labelled boxes:
+
+- **Research foundation:** checked when a prototype, research component or blocked-capability safety adapter exists in source. This is not a working on-chain feature.
+- **Acceptance:** read-only, checked only for milestones whose source-controlled `state` is `implemented`; outstanding external testnet, security and custody work remains unchecked.
+- **My review:** an editable checkbox stored in this browser alone, separate from release approval. Use **Clear my reviews** to reset; any number of checkmarks cannot enable real financial settlement.
+
+The dashboard groups milestones 1–5, 6–10, 11–14, 15–17 and 18–20, and supports an **outstanding only** filter. Manual checkboxes do not override the production readiness tracker or financial capability guards.

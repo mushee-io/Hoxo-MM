@@ -280,3 +280,28 @@ nav{display:grid;gap:5px}
 /* Back to the public HOXO landing page from any workspace screen */
 .breadcrumb-home{border:0;background:transparent;color:#91ead3;font:inherit;padding:4px 0;cursor:pointer;font-weight:700}
 .breadcrumb-home:hover{text-decoration:underline;color:#d8fff0}
+
+
+/* Launch / all twenty milestones. Two source-evidence boxes are read-only;
+   personal review is the only user-controlled checkbox. */
+.crossboxes-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:18px 0 14px}
+.crossboxes-controls label,.crossboxes-legend span,.crossboxes-status label{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.crossboxes-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.crossboxes-phase{margin-top:23px}
+.crossboxes-phase h4{font-size:14px;letter-spacing:.02em;margin:0 0 12px;color:var(--primary)}
+.crossboxes-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.crossboxes-item{min-width:0;padding:16px;border:1px solid var(--line);border-radius:12px;background:rgba(6,17,26,.36)}
+.crossboxes-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.crossboxes-title b{font-size:14px;line-height:1.45}
+.crossboxes-num{color:var(--primary);font-variant-numeric:tabular-nums;padding-right:3px}
+.crossboxes-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 10px;font-size:12px}
+.crossboxes-status label{white-space:nowrap}
+.crossboxes-item .muted{margin:7px 0 0}
+.crossboxes-item .side-pill{flex:0 0 auto}
+.crossboxes-status input[type=checkbox],.crossboxes-controls input[type=checkbox],.crossboxes-legend input[type=checkbox]{
+  width:16px;height:16px;margin:0;accent-color:#91ead3;vertical-align:middle
+}
+.crossboxes-status input[disabled],.crossboxes-legend input[disabled]{opacity:1;cursor:not-allowed}
+.crossboxes-item:focus-within{border-color:#91ead3}
+@media(max-width:1050px){.crossboxes-list{grid-template-columns:1fr}}
+@media(max-width:600px){.crossboxes-status{gap:12px}.crossboxes-title{flex-wrap:wrap}.crossboxes-item{padding:13px}}

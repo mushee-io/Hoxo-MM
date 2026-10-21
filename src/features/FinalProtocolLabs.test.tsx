@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { renderToString } from 'react-dom/server'
 import { BridgeResearchLab, PerpsClearingLab } from './FinalProtocolLabs'
 import { ReleaseChecklist } from './ReleaseChecklist'
+import { MilestoneCrossboxes } from './MilestoneCrossboxes'
 
 describe('HOXO M18–20 research UI safety labels',()=>{
  it('renders virtual matched perps, not real clearing',()=>{
@@ -25,4 +26,15 @@ describe('HOXO M18–20 research UI safety labels',()=>{
   expect(html).toContain('PRODUCTION STILL BLOCKED')
   expect(html).toContain('Third-party security and economic audits signed off')
  })
+  it('renders all 20 milestones with separate source and personal review crossboxes',()=>{
+    const html=renderToString(<MilestoneCrossboxes/>)
+    expect(html).toContain('Milestones 1–20')
+    expect(html).toContain('Research foundation')
+    expect(html).toContain('Acceptance')
+    expect(html).toContain('My review')
+    expect(html).toContain('Awaiting release acceptance')
+    expect((html.match(/Personally reviewed milestone /g)??[]).toHaveLength(20)
+    expect(html).toContain('Swap, Perps, Lending and Bridge execution stays blocked')
+  })
+
 })
