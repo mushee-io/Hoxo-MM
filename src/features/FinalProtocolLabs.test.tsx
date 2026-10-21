@@ -33,7 +33,7 @@ describe('HOXO M18–20 research UI safety labels',()=>{
     expect(html).toContain('Acceptance')
     expect(html).toContain('My review')
     expect(html).toContain('Awaiting release acceptance')
-    expect((html.match(/Personally reviewed milestone /g)??[]).toHaveLength(20)
+    expect((html.match(/Personally reviewed milestone /g)??[])).toHaveLength(20)
     expect(html).toContain('Swap, Perps, Lending and Bridge execution stays blocked')
   })
 
