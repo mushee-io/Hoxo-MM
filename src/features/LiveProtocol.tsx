@@ -6,7 +6,6 @@ import { productionReadiness, READINESS_GATES } from '../lib/readiness'
 import { LIVE_SETTLEMENT_ENABLED } from '../lib/security'
 import { MILESTONES } from '../lib/milestones'
 import { TestnetAssetCatalogue } from './TestnetAssets'
-import { TokenIntegrationLab } from './ProtocolLabs'
 import { MilestoneCrossboxes } from './MilestoneCrossboxes'
 import { ReleaseChecklist } from './ReleaseChecklist'
 
@@ -93,7 +92,6 @@ export function LiveLaunchPage({wallet}: {wallet:Wallet}){
     </section>
     <MilestoneCrossboxes/>
     <TestnetAssetCatalogue purpose="launch"/>
-    <TokenIntegrationLab/>
     <ReleaseChecklist/>
     <section className="panel">
       <div className="card-heading"><h3>Independent release gates</h3><span className="subtle-pill">{state.requiredChecks} CONDITIONS</span></div>
