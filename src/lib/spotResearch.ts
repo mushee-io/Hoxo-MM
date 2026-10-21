@@ -91,7 +91,8 @@ export function simulateResearchAtomicSwap(
   receivedOutAtomic: bigint,
   now: number,
 ): { balances: FictionalSpotParties; outputAtomic: bigint; settlement: 'simulated-only' } {
-  if (quote.execution !== 'unavailable' || quote.network !== 'beldex-testnet' ||
+  if (!Number.isSafeInteger(now) || now<=0 || typeof receivedOutAtomic!=='bigint' ||
+      quote.execution !== 'unavailable' || quote.network !== 'beldex-testnet' ||
       !hexTokenId(quote.fromAssetId) || !hexTokenId(quote.toAssetId) ||
       quote.fromAssetId === quote.toAssetId || quote.expiresAtMs <= now ||
       quote.amountInAtomic <= 0n || quote.minimumOutAtomic <= 0n ||
