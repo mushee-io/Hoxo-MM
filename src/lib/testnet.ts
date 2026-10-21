@@ -7,6 +7,8 @@ import { checkAddress, toAtomic } from '@bdxi/web3js'
  */
 export const MAX_TESTNET_SEND_BDX = '5'
 export const MAX_TESTNET_SEND_ATOMIC = 5_000_000_000n
+// Conservative preview buffer, NOT a fee quote. Wallet may require more.
+export const MIN_TESTNET_FEE_BUFFER_ATOMIC = 10_000_000n
 
 export function validateTestnetSend(
   network: string,
@@ -27,7 +29,9 @@ export function validateTestnetSend(
   if (atomic > MAX_TESTNET_SEND_ATOMIC) throw new Error('Testnet safety limit is ' + MAX_TESTNET_SEND_BDX + ' BDX per transfer')
   if (typeof unlockedAtomic !== 'bigint' || unlockedAtomic < 0n) throw new Error('Wallet balance is unavailable')
   // Do not allow draining the wallet: native network fees are additional.
-  if (atomic >= unlockedAtomic) throw new Error('Insufficient unlocked testnet BDX; leave some test BDX for network fees')
+  if (atomic + MIN_TESTNET_FEE_BUFFER_ATOMIC > unlockedAtomic) {
+    throw new Error('Insufficient unlocked testnet BDX; leave at least 0.01 test BDX as a provisional fee buffer (wallet fees may be higher)')
+  }
   return { to, atomic }
 }
 

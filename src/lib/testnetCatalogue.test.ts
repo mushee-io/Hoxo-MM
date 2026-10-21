@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseTokenDescriptor,
-  parseTokenList, TOKEN_PAGE_LIMIT,
+  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseTokenDescriptor, parseVerifiedPublicTokenLookup,
+  parseTokenList,
 } from './testnetCatalogue'
 
 const id = 'a'.repeat(64)
@@ -30,7 +30,8 @@ describe('published public Beldex testnet token metadata', () => {
     expect(parseTokenList({ token_ids: ['invalid'] })).toBeNull()
     expect(parseTokenList({ token_ids: false })).toBeNull()
     expect(parseTokenList({ token_ids: [], total_count: 0 })).toEqual({ ids: [], totalCount: 0 })
-    expect(parseTokenList({ token_ids: Array(15).fill(id), total_count: 50 })?.ids).toHaveLength(TOKEN_PAGE_LIMIT)
+    expect(parseTokenList({ token_ids: Array(15).fill(id), total_count: 50 })).toBeNull()
+    expect(parseTokenList({ token_ids: [id, id.toUpperCase()], total_count: 2 })).toBeNull()
   })
   it('formats large atomic supplies precisely without floating-point rounding', () => {
     expect(formatAtomicAssetBalance('123456789000', 9)).toBe('123.456789')
@@ -51,5 +52,20 @@ describe('published public Beldex testnet token metadata', () => {
     expect(isTokenCatalogue(result)).toBe(true)
     expect(isTokenCatalogue({ ...result, network: 'beldex-mainnet' })).toBe(false)
     expect(isTokenCatalogue({ ...result, tokens: [null] })).toBe(false)
+  })
+  it('validates the public metadata envelope against the requested asset ID', () => {
+    const valid = {
+      network: 'beldex-testnet', source: 'official-wallet-configured-testnet-lws',
+      obtainedAt: '2026-10-21T18:00:00Z',
+      asset: { tokenId: id, ticker: 'HOXO', name: 'Hoxo Test Token', decimals: 9,
+        currentSupplyAtomic: '123456789000', maximumSupplyAtomic: '1000000000000', owner: 'public-testnet-owner' },
+    }
+    expect(parseVerifiedPublicTokenLookup(valid, id)?.ticker).toBe('HOXO')
+    expect(parseVerifiedPublicTokenLookup(valid, id.toUpperCase())?.tokenId).toBe(id)
+    expect(parseVerifiedPublicTokenLookup({ ...valid, network: 'beldex-mainnet' }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, source: 'wallet-portfolio' }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, asset: { ...valid.asset, tokenId: 'b'.repeat(64) } }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, asset: { ...valid.asset, currentSupplyAtomic: 'NaN' } }, id)).toBeNull()
+    expect(parseVerifiedPublicTokenLookup({ ...valid, obtainedAt: 'not-a-date' }, id)).toBeNull()
   })
 })

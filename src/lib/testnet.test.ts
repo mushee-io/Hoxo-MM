@@ -27,6 +27,10 @@ describe('HOXO wallet-approved native BDX testnet safety checks', () => {
       expect(() => validateTestnetSend('testnet', EXAMPLE_ADDRESS, value, unlocked)).toThrow()
     }
   })
+  it('protects a preliminary 0.01 BDX fee buffer, not a guaranteed fee estimate', () => {
+    expect(() => validateTestnetSend('testnet', EXAMPLE_ADDRESS, '1', 1_009_999_999n)).toThrow(/0.01/)
+    expect(validateTestnetSend('testnet', EXAMPLE_ADDRESS, '1', 1_010_000_000n).atomic).toBe(1_000_000_000n)
+  })
   it('protects a fee reserve and requires an unlocked balance', () => {
     expect(() => validateTestnetSend('testnet', EXAMPLE_ADDRESS, '5', 5_000_000_000n)).toThrow(/fees/)
     expect(() => validateTestnetSend('testnet', EXAMPLE_ADDRESS, '0.1', 0n)).toThrow(/fees/)

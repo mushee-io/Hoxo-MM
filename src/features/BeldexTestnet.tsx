@@ -14,7 +14,10 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
   const testnet = isTestnet(connection?.network)
   let validation = ''
   if (connection?.unlockedAtomic !== null && connection?.unlockedAtomic !== undefined) {
-    try { validateTestnetSend(connection.network, recipient, amount, connection.unlockedAtomic) }
+    try {
+      validateTestnetSend(connection.network, recipient, amount, connection.unlockedAtomic)
+      if (recipient === connection.address) throw new Error('Use a second TESTNET wallet as recipient, not the sending address')
+    }
     catch (e) { validation = e instanceof Error ? e.message : 'Invalid testnet request' }
   } else validation = 'Connect and refresh a Beldex TESTNET wallet to read an available BDX balance'
   const previousUnknown = Boolean(wallet.unresolvedLock) || wallet.transaction?.status === 'unknown'
@@ -55,7 +58,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
             <input type="text" inputMode="decimal" value={amount} onChange={e => { setAmount(e.target.value); setAcknowledged(false) }} placeholder="0.1"/>
           </label>
         </div>
-        <p className="muted smaller">Safety cap: {MAX_TESTNET_SEND_BDX} test BDX per wallet approval. Network fees are additional, so leave test BDX available for fees.</p>
+        <p className="muted smaller">Safety cap: {MAX_TESTNET_SEND_BDX} test BDX per wallet approval. Leave at least 0.01 test BDX unspent as a preliminary fee buffer. The wallet may charge a higher network fee.</p>
         {connection && validation && <p className="negative-text smaller">{validation}</p>}
         <label style={{ display: 'flex', gap: 10, alignItems: 'start', fontSize: 12, lineHeight: 1.5, margin: '18px 0' }}>
           <input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} style={{ marginTop: 4 }}/>

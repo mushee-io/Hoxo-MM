@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight, Database, RefreshCw, ShieldAlert } from 'lucide-react'
 import {
-  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, type TokenCatalogue,
+  formatAtomicAssetBalance, hexTokenId, isTokenCatalogue, parseVerifiedPublicTokenLookup, type TokenCatalogue,
   type PublicPrivacyToken, TOKEN_PAGE_LIMIT,
 } from '../lib/testnetCatalogue'
+import { addPublicWatchlistId, readPublicWatchlist, removePublicWatchlistId } from '../lib/publicAssetWatchlist'
 
 export type CataloguePurpose = 'swap' | 'lend' | 'portfolio' | 'launch'
 export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }) {
@@ -16,27 +17,31 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
   const [found, setFound] = useState<PublicPrivacyToken | null>(null)
   const [lookupError, setLookupError] = useState('')
   const [checkingToken, setCheckingToken] = useState(false)
-  async function verifyPublicAssetId() {
+  const [tracked, setTracked] = useState<string[]>(() => readPublicWatchlist(localStorage))
+  async function verifyPublicAssetId(requested?: string) {
     setLookupError('')
     setFound(null)
-    const id = tokenId.trim()
+    const id = (requested ?? tokenId).trim()
     if (!hexTokenId(id)) { setLookupError('Paste the full 64-character hexadecimal Privacy Token ID from your Beldex testnet wallet.'); return }
     setCheckingToken(true)
     try {
       const response = await fetch('/api/testnet-token?id=' + id, { cache: 'no-store' })
       if (!response.ok) throw new Error('The testnet LWS did not return a confirmed public descriptor for that ID.')
       const result: unknown = await response.json()
-      if (!result || typeof result !== 'object' || !('asset' in result)) throw new Error('Unrecognised testnet asset reply')
-      const raw = (result as { asset: unknown }).asset
-      if (!raw || typeof raw !== 'object') throw new Error('Invalid public token descriptor')
-      const asset = raw as PublicPrivacyToken
-      if (asset.tokenId !== id.toLowerCase() || !/^\d{1,40}$/.test(asset.currentSupplyAtomic) ||
-          !Number.isInteger(asset.decimals) || asset.decimals < 0 || asset.decimals > 18) {
-        throw new Error('Token data did not match the requested testnet asset ID')
-      }
-      setFound(asset)
+      const verified = parseVerifiedPublicTokenLookup(result, id)
+      if (!verified) throw new Error('Public asset metadata did not match the verified testnet descriptor')
+      setFound(verified)
     } catch (cause) { setLookupError(cause instanceof Error ? cause.message : 'Public token lookup failed') }
     finally { setCheckingToken(false) }
+  }
+
+  function addTracked(id: string) {
+    try { setTracked(addPublicWatchlistId(localStorage, id)); setLookupError('') }
+    catch (cause) { setLookupError(cause instanceof Error ? cause.message : 'Could not save public token ID') }
+  }
+  function removeTracked(id: string) {
+    try { setTracked(removePublicWatchlistId(localStorage, id)); setLookupError('') }
+    catch (cause) { setLookupError(cause instanceof Error ? cause.message : 'Could not remove public token ID') }
   }
 
   const refresh = useCallback(() => setRevision(v => v + 1), [])
@@ -96,12 +101,25 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
         {checkingToken ? 'Checking official testnet metadata…' : 'Verify testnet token ID'}
       </button>
       {lookupError && <p className="negative-text smaller">{lookupError}</p>}
+      {found && purpose === 'portfolio' && <button className="btn btn-outline" style={{ marginTop: 12 }} disabled={tracked.includes(found.tokenId)} onClick={() => addTracked(found.tokenId)}>{tracked.includes(found.tokenId) ? 'Public token bookmarked' : 'Bookmark public token metadata (not a holding)'}</button>}
       {found && <div className="route-result-metrics">
         <span>Asset on public registry<b>{found.name || found.ticker || 'Unnamed'}</b></span>
         <span>Token ID<b style={{ overflowWrap: 'anywhere' }}>{found.tokenId.slice(0, 14)}…</b></span>
         <span>Descriptor supply<b>{formatAtomicAssetBalance(found.currentSupplyAtomic, found.decimals)}</b></span>
       </div>}
     </div>
+    {purpose === 'portfolio' && <div className="route-result">
+      <div className="card-heading"><h3>Saved public token identifiers</h3><span className="subtle-pill">WATCHLIST · NOT OWNED</span></div>
+      <p className="muted smaller">These are public asset metadata bookmarks stored in this browser only. No token balance or ownership was queried. Beldex wallet extension dApps do not yet expose Privacy Token balance queries.</p>
+      {tracked.length === 0 ? <p className="muted smaller">No public token IDs bookmarked. Verify an asset ID above to save it here.</p> :
+        tracked.map(id => <div className="route-result-title" key={id} style={{ gap: 8, flexWrap: 'wrap' }}>
+          <code title={id}>{id.slice(0, 14)}…{id.slice(-8)}</code>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="mini-btn" onClick={() => { setTokenId(id); void verifyPublicAssetId(id) }}>Check public metadata</button>
+            <button className="mini-btn" onClick={() => removeTracked(id)}>Remove</button>
+          </div>
+        </div>)}
+    </div>}
     {purpose === 'launch' && <div className="route-result">
       <b>Token-launch workflow on the official testnet wallet</b>
       <p className="muted smaller">1. Connect and unlock your Beldex Extension Wallet on TESTNET. 2. Open the extension's Tokens screen and select Register token. 3. Complete the wallet's issuance details and approve in the extension. 4. Copy the resulting asset ID and verify its public metadata above. 5. Confirm issuance in the wallet before claiming success. HOXO does not perform issuance or asset transfers on your behalf.</p>

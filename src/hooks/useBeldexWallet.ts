@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { BdxRpcError, BeldexWeb3, detectProvider, fromAtomic } from '@bdxi/web3js'
 import { isTestnet } from '../lib/testnet'
 import { executeOneApprovedTestnetSend } from '../lib/nativeTransfer'
+import { withExclusiveTestnetSend } from '../lib/sendConcurrency'
 import { clearTransferLock, readTransferLock, shouldPreserveLockAfterError, type TransferLock } from '../lib/transferSafety'
 import { buildTestnetWalletProof, assertProofResponse, type VerifiedLocalProof } from '../lib/testnetProof'
 import { buildTestnetIntent, verifyIntentAssociation, type IntentDraft, type SignedTestnetIntent } from '../lib/testnetIntents'
@@ -132,7 +133,7 @@ export function useBeldexWallet() {
     setError(null)
     try {
       const key = crypto.randomUUID()
-      const result = await executeOneApprovedTestnetSend(wallet, localStorage, {
+      const result = await withExclusiveTestnetSend(() => executeOneApprovedTestnetSend(wallet, localStorage, {
         expectedAddress: connection.address,
         expectedNetwork: connection.network,
         recipient: to,
@@ -140,7 +141,13 @@ export function useBeldexWallet() {
       }, key, Date.now(), () => {
         setUnresolvedLock(readTransferLock(localStorage))
         setTransaction({ status: 'awaiting-approval', message: 'Review this testnet-only BDX transfer in your wallet.' })
-      })
+      }))
+      // A send may finish after the extension switches account/network.
+      // Treat that outcome as uncertain and KEEP the duplicate-send guard.
+      const [currentNetwork, currentAddress] = await Promise.all([wallet.getNetwork(), wallet.getAddress()])
+      if (sdk.current !== wallet || currentNetwork.nettype !== 'testnet' || currentAddress !== connection.address) {
+        throw new Error('Wallet identity changed after the approval request; reconcile the transfer before proceeding')
+      }
       clearTransferLock(localStorage)
       setUnresolvedLock(null)
       setTransaction({ status: 'broadcast', txHash: result.txHash, fee: fromAtomic(result.fee), operationId: result.operationId, message: 'Wallet returned a transaction hash. Check your wallet for chain confirmation.' })
@@ -177,7 +184,11 @@ export function useBeldexWallet() {
     if (!wallet || !operationId) { setError('No recoverable wallet operation ID is available'); return }
     try {
       const details = await wallet.getNetwork()
-      if (details.nettype !== 'testnet' || connection?.network !== 'testnet') throw new Error('Status lookup requires the same Beldex TESTNET wallet')
+      const address = await wallet.getAddress()
+      if (details.nettype !== 'testnet' || connection?.network !== 'testnet' ||
+          address !== connection.address || sdk.current !== wallet) {
+        throw new Error('Status lookup requires the original connected Beldex TESTNET account')
+      }
       const result = await wallet.getOperationStatus(operationId)
       if (result.status === 'confirmed') {
         setTransaction({ status: 'broadcast', txHash: result.txHash, fee: fromAtomic(result.fee), operationId, message: 'Wallet confirms the operation. Verify transaction inclusion independently.' })
