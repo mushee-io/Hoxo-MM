@@ -3,7 +3,6 @@ import { type useBeldexWallet } from '../hooks/useBeldexWallet'
 import { LIVE_PRODUCT_CAPABILITIES } from '../lib/liveNavigation'
 import { CAPABILITY_CATALOGUE, capabilityAvailability } from '../lib/capabilities'
 import { productionReadiness, READINESS_GATES } from '../lib/readiness'
-import { LIVE_SETTLEMENT_ENABLED } from '../lib/security'
 import { MILESTONES } from '../lib/milestones'
 import { TestnetAssetCatalogue } from './TestnetAssets'
 import { MilestoneCrossboxes } from './MilestoneCrossboxes'
@@ -37,12 +36,13 @@ export function LiveUnavailableProduct({type,onOpenWallet}:{
 }
 export function LiveSecurityPage(){
   const state=productionReadiness()
+  const allSettlementMethodsBlocked=CAPABILITY_CATALOGUE.filter(x=>x.operation==='settlement').every(x=>x.state==='blocked')
   return <div className="stack">
     <div className="section-header"><div><div className="eyebrow">SECURITY</div><h1>Execution controls</h1>
       <p>Financial execution is restricted at the capability boundary, not by a cosmetic toggle.</p></div>
       <span className="subtle-pill">FINANCIAL SETTLEMENT OFF</span></div>
     <section className="panel">
-      <div className="card-heading"><h3>Settlement safety</h3><span className="subtle-pill">{LIVE_SETTLEMENT_ENABLED?'ENABLED':'DISABLED'}</span></div>
+      <div className="card-heading"><h3>Settlement safety</h3><span className="subtle-pill">{allSettlementMethodsBlocked?'DISABLED':'UNVERIFIED'}</span></div>
       <div className="privacy-box"><ShieldCheck size={20}/><div>
         <b>Unsupported DeFi calls are rejected</b>
         <p>The official Beldex wallet can read native wallet balances and approve native BDX testnet sends. Private asset swaps, lending, perps and bridges require separately audited infrastructure.</p>
