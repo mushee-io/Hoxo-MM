@@ -22,7 +22,7 @@ export function BeldexTestnetPage({ wallet }: { wallet: WalletHook }) {
   } else validation = 'Connect and refresh a Beldex TESTNET wallet to read an available BDX balance'
   const previousUnknown = Boolean(wallet.unresolvedLock) || wallet.transaction?.status === 'unknown'
   const canSend = testnet && !validation && acknowledged && !wallet.busySend && !previousUnknown
-  return <div className="stack">
+  return <div className="stack" data-section="testnet">
     <div className="section-header">
       <div><div className="eyebrow">MILESTONE 1 / REAL TESTNET INTEGRATION</div><h1>Beldex Testnet</h1>
         <p>Authorise an actual testnet-only BDX transaction in your own wallet. This is a native privacy-chain transfer — not a swap or a Privacy Token transaction.</p></div>

@@ -4,6 +4,18 @@ export const LIVE_PAGES = [
   'Routes', 'Portfolio', 'Security', 'Launch',
 ] as const
 export type LivePage = typeof LIVE_PAGES[number]
+/** Each sidebar item has its own route and dedicated product section. */
+export const SECTION_DESCRIPTIONS: Readonly<Record<LivePage,string>> = Object.freeze({
+  Overview: 'Wallet and product status at a glance',
+  Testnet: 'Connect, sign and transfer real native test BDX',
+  Swap: 'Public tokens and spot-exchange integration',
+  Perps: 'Margin, orderbook and oracle integration',
+  Lend: 'Collateral, supply and loan-market readiness',
+  Routes: 'Cross-chain integration and bridge verification',
+  Portfolio: 'Actual BDX balances and public token watchlist',
+  Security: 'Financial execution guards and safety requirements',
+  Launch: 'All 20 milestones and launch acceptance',
+})
 export const LIVE_PRODUCT_CAPABILITIES = Object.freeze({
   Swap: { title: 'Swap', active: false, requirement: 'Beldex private-token wallet sends, real liquidity and reviewed two-sided settlement are unavailable.' },
   Perps: { title: 'Perpetuals', active: false, requirement: 'No Beldex margin escrow, independent live oracle, liquidation engine or enforceable perps settlement is connected.' },

@@ -313,3 +313,17 @@ nav{display:grid;gap:5px}
 .live-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .live-product-grid .product-tile{min-width:0}
 @media(max-width:800px){.live-product-grid{grid-template-columns:1fr}}
+
+
+/* Product workspaces: independently navigable, wallet-safe panels. */
+.protocol-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.protocol-section-grid>.panel{min-width:0}
+.protocol-requirements{margin:10px 0 0;padding-left:22px;display:grid;gap:11px;color:#b5c8cf;font-size:13px;line-height:1.6}
+.protocol-requirements li::marker{color:#91ead3}
+.protocol-inline-action{align-self:flex-start}
+.section-header h1 svg{vertical-align:middle;margin-right:8px;color:#91ead3}
+.nav-item[aria-current="page"]{outline-offset:-2px}
+.live-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.live-product-grid .product-tile{height:100%}
+@media(max-width:900px){.protocol-section-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.section-header h1 svg{width:23px;height:23px}}

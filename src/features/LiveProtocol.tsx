@@ -1,6 +1,5 @@
-import { ArrowRight, CircleAlert, ExternalLink, LockKeyhole, ShieldCheck, Wallet } from 'lucide-react'
+import { ExternalLink, ShieldCheck } from 'lucide-react'
 import { type useBeldexWallet } from '../hooks/useBeldexWallet'
-import { LIVE_PRODUCT_CAPABILITIES } from '../lib/liveNavigation'
 import { CAPABILITY_CATALOGUE, capabilityAvailability } from '../lib/capabilities'
 import { productionReadiness, READINESS_GATES } from '../lib/readiness'
 import { MILESTONES } from '../lib/milestones'
@@ -9,35 +8,10 @@ import { MilestoneCrossboxes } from './MilestoneCrossboxes'
 import { ReleaseChecklist } from './ReleaseChecklist'
 
 type Wallet=ReturnType<typeof useBeldexWallet>
-export function LiveUnavailableProduct({type,onOpenWallet}:{
-  type:keyof typeof LIVE_PRODUCT_CAPABILITIES,
-  onOpenWallet:()=>void
-}){
-  const feature=LIVE_PRODUCT_CAPABILITIES[type]
-  return <div className="stack">
-    <div className="section-header"><div><div className="eyebrow">BELDEX INTEGRATION</div><h1>{feature.title}</h1>
-      <p>HOXO displays no fabricated orders, prices, collateral or trade execution.</p></div>
-      <span className="subtle-pill">SETTLEMENT UNAVAILABLE</span>
-    </div>
-    <section className="panel">
-      <div className="card-heading"><h3><LockKeyhole size={17}/> Protocol readiness</h3><span className="subtle-pill">DISABLED BY CODE</span></div>
-      <div className="privacy-box"><CircleAlert size={20}/><div><b>Real {feature.title.toLowerCase()} execution is not connected.</b><p>{feature.requirement}</p></div></div>
-      <p className="muted smaller">No wallet approval for {feature.title.toLowerCase()} settlement can be requested in this interface. Only a native BDX testnet transfer is available through the official wallet connection.</p>
-      <button className="btn btn-outline" onClick={onOpenWallet}><Wallet size={16}/> Open supported Beldex testnet wallet <ArrowRight size={15}/></button>
-    </section>
-    {type==='Routes'&&<div className="panel">
-      <h3>Cross-chain adapter status</h3>
-      <div className="table-scroll"><table className="data-table"><thead><tr><th>Network</th><th>HOXO adapter</th><th>Transfer</th></tr></thead><tbody>
-        {['Beldex testnet','Ethereum','Base','BNB Smart Chain'].map(name=>
-          <tr key={name}><td>{name}</td><td>Not deployed / unverified</td><td>Unavailable</td></tr>)}
-      </tbody></table></div>
-    </div>}
-  </div>
-}
 export function LiveSecurityPage(){
   const state=productionReadiness()
   const allSettlementMethodsBlocked=CAPABILITY_CATALOGUE.filter(x=>x.operation==='settlement').every(x=>x.state==='blocked')
-  return <div className="stack">
+  return <div className="stack" data-section="security">
     <div className="section-header"><div><div className="eyebrow">SECURITY</div><h1>Execution controls</h1>
       <p>Financial execution is restricted at the capability boundary, not by a cosmetic toggle.</p></div>
       <span className="subtle-pill">FINANCIAL SETTLEMENT OFF</span></div>
@@ -61,7 +35,7 @@ export function LiveLaunchPage({wallet}: {wallet:Wallet}){
   const state=productionReadiness()
   const ctx={network:connection?.network??null,walletConnected:!!connection,
     unlockedAtomic:connection?.unlockedAtomic??null,approximateBalance:connection?.approximate??true}
-  return <div className="stack">
+  return <div className="stack" data-section="launch">
     <div className="section-header"><div><div className="eyebrow">DEVELOPMENT AND ACCEPTANCE</div><h1>Launch readiness</h1>
       <p>Review independently verifiable integration work and outstanding security requirements. No simulated financial services are accessible.</p></div>
       <span className="subtle-pill">PRODUCTION FINANCE BLOCKED</span></div>

@@ -17,7 +17,7 @@ export function TestnetAssetCatalogue({ purpose }: { purpose: CataloguePurpose }
   const [found, setFound] = useState<PublicPrivacyToken | null>(null)
   const [lookupError, setLookupError] = useState('')
   const [checkingToken, setCheckingToken] = useState(false)
-  const [tracked, setTracked] = useState<string[]>(() => readPublicWatchlist(localStorage))
+  const [tracked, setTracked] = useState<string[]>(() => typeof window==='undefined' ? [] : readPublicWatchlist(window.localStorage))
   async function verifyPublicAssetId(requested?: string) {
     setLookupError('')
     setFound(null)
