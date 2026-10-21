@@ -8,9 +8,12 @@ import Landing from './Landing'
 import { useBeldexWallet } from './hooks/useBeldexWallet'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetAssetCatalogue } from './features/TestnetAssets'
-import { LiveLaunchPage, LiveSecurityPage, LiveUnavailableProduct } from './features/LiveProtocol'
-import { LIVE_PAGES, livePageForPath, type LivePage } from './lib/liveNavigation'
-import { LIVE_PRODUCT_CAPABILITIES } from './lib/liveNavigation'
+import { LiveLaunchPage, LiveSecurityPage } from './features/LiveProtocol'
+import { SwapSection } from './features/SwapSection'
+import { PerpsSection } from './features/PerpsSection'
+import { LendSection } from './features/LendSection'
+import { RoutesSection } from './features/RoutesSection'
+import { LIVE_PAGES, SECTION_DESCRIPTIONS, livePageForPath, type LivePage } from './lib/liveNavigation'
 
 const ICONS = {
   Overview: LayoutDashboard, Testnet: ShieldCheck, Swap: ArrowLeftRight,
@@ -69,14 +72,16 @@ function Overview({wallet,openPage}:{
       <div className="metric-card"><div className="metric-top">Live DeFi settlement</div><strong>Not enabled</strong><span className="metric-sub">Requires reviewed chain infrastructure</span></div>
     </div>
     <div className="panel">
-      <div className="card-heading"><h3>Product availability</h3><span className="subtle-pill">NO SYNTHETIC TRADES</span></div>
+      <div className="card-heading"><h3>Explore every HOXO section</h3><span className="subtle-pill">9 DEDICATED SECTIONS</span></div>
       <div className="live-product-grid">
-        {Object.entries(LIVE_PRODUCT_CAPABILITIES).map(([page,product])=>
-          <button key={page} type="button" className="product-tile" onClick={()=>openPage(page as LivePage)}>
-            <span className="product-icon teal"><LockKeyhole size={19}/></span>
-            <span><b>{product.title}</b><small>Integration unavailable — inspect requirements</small></span>
+        {LIVE_PAGES.filter(item=>item!=='Overview').map(item=>{
+          const Icon=ICONS[item]
+          return <button key={item} type="button" className="product-tile" onClick={()=>openPage(item)}>
+            <span className="product-icon teal"><Icon size={19}/></span>
+            <span><b>{item}</b><small>{SECTION_DESCRIPTIONS[item]}</small></span>
             <ArrowRight size={16}/>
-          </button>)}
+          </button>
+        })}
       </div>
       <p className="muted smaller">Native BDX wallet connectivity and wallet-approved testnet sends are separate from swaps, derivatives, borrowing and bridges.</p>
     </div>
@@ -109,7 +114,7 @@ export default function App(){
       <nav aria-label="HOXO navigation">
         {LIVE_PAGES.map(item=>{
           const Icon=ICONS[item]
-          return <button key={item} type="button" className={'nav-item '+(item===page?'active':'')}
+          return <button key={item} type="button" className={'nav-item '+(item===page?'active':'')} aria-current={item===page?'page':undefined}
             onClick={()=>go(item)}><Icon size={18}/><span>{item}</span></button>
         })}
       </nav>
@@ -145,10 +150,10 @@ export default function App(){
         </div>}
         {page==='Overview'&&<Overview wallet={wallet} openPage={go}/>}
         {page==='Testnet'&&<BeldexTestnetPage wallet={wallet}/>}
-        {page==='Swap'&&<><LiveUnavailableProduct type="Swap" onOpenWallet={()=>go('Testnet')}/><TestnetAssetCatalogue purpose="swap"/></>}
-        {page==='Perps'&&<LiveUnavailableProduct type="Perps" onOpenWallet={()=>go('Testnet')}/>}
-        {page==='Lend'&&<LiveUnavailableProduct type="Lend" onOpenWallet={()=>go('Testnet')}/>}
-        {page==='Routes'&&<LiveUnavailableProduct type="Routes" onOpenWallet={()=>go('Testnet')}/>}
+        {page==='Swap'&&<SwapSection wallet={wallet} onOpenTestnet={()=>go('Testnet')}/>}
+        {page==='Perps'&&<PerpsSection wallet={wallet} onOpenTestnet={()=>go('Testnet')}/>}
+        {page==='Lend'&&<LendSection wallet={wallet} onOpenTestnet={()=>go('Testnet')}/>}
+        {page==='Routes'&&<RoutesSection/>}
         {page==='Portfolio'&&<LivePortfolio wallet={wallet}/>}
         {page==='Security'&&<LiveSecurityPage/>}
         {page==='Launch'&&<LiveLaunchPage wallet={wallet}/>}
