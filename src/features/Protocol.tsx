@@ -4,7 +4,7 @@ import { assetSymbols, displayNumber, money, priceOf, type Asset } from '../lib/
 import { CHAINS, findDemoRoutes, MAX_DEMO_TRADE_USD, type ChainId, type RoutePlan } from '../lib/routes'
 import { POLICY, type DemoPolicyState, LIVE_SETTLEMENT_ENABLED } from '../lib/security'
 import { productionReadiness, READINESS_GATES } from '../lib/readiness'
-import { MILESTONES, milestoneOverview } from '../lib/milestones'
+import { MilestoneCrossboxes } from './MilestoneCrossboxes'
 import { CAPABILITY_CATALOGUE, capabilityAvailability, type CapabilityContext } from '../lib/capabilities'
 import { estimateDemoEconomics } from '../lib/economics'
 import { TestnetAssetCatalogue } from './TestnetAssets'
@@ -142,13 +142,7 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer, wallet
         })}
       </tbody></table></div>
     </section>
-    <section className="panel">
-      <div className="card-heading"><h3>Development milestones 1–20</h3><span className="subtle-pill">{milestoneOverview().completed} / 20 VERIFIED IN CODE</span></div>
-      <p className="muted smaller">Status is evidence-based. Research maths and off-chain approvals do not constitute live trading. Upstream dependencies and real-world wallet tests cannot be completed by frontend changes alone.</p>
-      <div className="table-scroll"><table className="data-table"><thead><tr><th>#</th><th>Workstream</th><th>Status</th><th>Evidence / implementation</th><th>Required acceptance</th></tr></thead><tbody>
-        {MILESTONES.map(m => <tr key={m.number}><td><input type="checkbox" disabled checked={m.state==='implemented'} aria-label={'Milestone '+m.number+' independently implemented status'}/> {m.number}</td><td><b>{m.title}</b></td><td><span className={'side-pill ' + (m.state === 'implemented' ? 'neutral' : m.state === 'blocked' ? 'short' : '')}>{m.state.toUpperCase()}</span></td><td className="readiness-requirement">{m.evidence}</td><td className="readiness-requirement">{m.nextGate}</td></tr>)}
-      </tbody></table></div>
-    </section>
+    <MilestoneCrossboxes/>
     <TestnetAssetCatalogue purpose="launch"/>
     <TokenIntegrationLab/>
     <ReleaseChecklist/>
