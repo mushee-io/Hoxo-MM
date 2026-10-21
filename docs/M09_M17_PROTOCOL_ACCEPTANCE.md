@@ -21,10 +21,10 @@
 ## Architecture trust boundaries
 
 - **User wallet:** Official Beldex dApp protocol v1 exposes *native BDX* wallet operations. HOXO must not claim Privacy Token balance, issue, or send methods have shipped, and must not collect view/spend keys.
-- **Public metadata:** \`/api/testnet-token\` and \`/api/testnet-tokens\` retrieve public descriptors only. No account balance, token ownership or mint finality can be deduced from a public descriptor.
+- **Public metadata:** `/api/testnet-token` and `/api/testnet-tokens` retrieve public descriptors only. No account balance, token ownership or mint finality can be deduced from a public descriptor.
 - **Research calculator:** All simulated token amounts and USD prices are locally supplied fixtures. The BigInt engines run no RPC calls, operate on no real funds, and cannot sign transactions.
 - **Research swap tickets:** Local ticket IDs, quote ranks and virtual settlement results are not exchange fills, executable maker quotes or independently enforceable commitments.
-- **Research collateral:** \`cash + debt = supplied + accrued interest\` is a model invariant, **not** proof of on-chain reserves or solvency. The model cannot accept or lock assets.
+- **Research collateral:** `cash + debt = supplied + accrued interest` is a model invariant, **not** proof of on-chain reserves or solvency. The model cannot accept or lock assets.
 - **Real testnet BDX:** Actual transfer workflow remains separately restricted to the **Testnet** tab, official wallet approval, per-request cap and exact account/network checks.
 
 ## Acceptance and testing gates
@@ -52,13 +52,13 @@
 
 Run on a fresh clone:
 
-\`\`\`sh
+```sh
 npm install
 npm audit --omit=dev --audit-level=high
 npm run typecheck
 npm test
 npm run build
-\`\`\`
+```
 
 When CI passes, only implementation and **mocked/fictional research logic** have been proven; no live testnet asset transfer, custody or derivatives/lending settlement is certified.
 
