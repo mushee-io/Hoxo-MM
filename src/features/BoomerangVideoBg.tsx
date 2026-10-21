@@ -7,6 +7,15 @@ export const MAX_CAPTURE_WIDTH = 960
 export const BOOMERANG_FPS = 30
 export const FRAME_INTERVAL_MS = 1000 / BOOMERANG_FPS
 
+export type PingPongState = Readonly<{ index: number; direction: 1 | -1 }>
+export function nextPingPongFrame(state: PingPongState, length: number): PingPongState {
+  if (length < 2) return { index: 0, direction: 1 }
+  const next = state.index + state.direction
+  if (next >= length - 1) return { index: length - 1, direction: -1 }
+  if (next <= 0) return { index: 0, direction: 1 }
+  return { index: next, direction: state.direction }
+}
+
 /**
  * Plays the actual source video once, recording every rendered frame at up to
  * 960 pixels wide. Then displays those recorded frames on a canvas, forwarding
@@ -104,14 +113,9 @@ export function BoomerangVideoBg() {
       setCanvasVisible(true)
       intervalId = window.setInterval(() => {
         if (disposed || frames.length < 2) return
-        frameIndex += direction
-        if (frameIndex >= frames.length - 1) {
-          frameIndex = frames.length - 1
-          direction = -1
-        } else if (frameIndex <= 0) {
-          frameIndex = 0
-          direction = 1
-        }
+        const next = nextPingPongFrame({ index: frameIndex, direction }, frames.length)
+        frameIndex = next.index
+        direction = next.direction
         context.clearRect(0, 0, width, height)
         context.drawImage(frames[frameIndex], 0, 0)
       }, FRAME_INTERVAL_MS)
