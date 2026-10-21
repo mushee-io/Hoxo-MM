@@ -18,6 +18,7 @@ import { RoutesPage, SecurityPage, LaunchPage } from './features/Protocol'
 import { BeldexTestnetPage } from './features/BeldexTestnet'
 import { TestnetIntentPanel } from './features/TestnetIntents'
 import { SpotResearchLab, LendingResearchLab } from './features/ProtocolLabs'
+import { PerpsClearingLab } from './features/FinalProtocolLabs'
 import { TestnetAssetCatalogue } from './features/TestnetAssets'
 import { privateAssetMethodReadiness } from './lib/privacyCapabilities'
 import { executeDemoRoute, type RoutePlan } from './lib/routes'
@@ -234,6 +235,7 @@ function Perps({ demo, shock, onShock, onOpen, onClose }: {
         {demo.positions.length === 0 && <tr><td colSpan={7}><div className="empty-table"><BarChart3 size={27}/><b>No positions yet</b><span>Open a simulated long or short to get started.</span></div></td></tr>}
       </tbody></table></div>
     </section>
+    <PerpsClearingLab/>
   </div>
 }
 
