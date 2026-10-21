@@ -2,6 +2,23 @@
 
 # HOXO — Privacy Runs Deep
 
+## Nine dedicated app sections
+
+| Sidebar | URL | Workspace |
+| --- | --- | --- |
+| Overview | `/app` | Actual wallet connection and product status |
+| Testnet | `/app/testnet` | User-approved native BDX testnet transfer and wallet proof |
+| Swap | `/app/swap` | Public Beldex token discovery and spot-settlement requirements |
+| Perps | `/app/perps` | Margin, oracle, liquidation and order-engine readiness |
+| Lend | `/app/lend` | Supply, borrow, collateral, and debt integration readiness |
+| Routes | `/app/routes` | Unverified cross-chain adapter and custody matrix |
+| Portfolio | `/app/portfolio` | Wallet-authorised native BDX balances and public asset bookmarks |
+| Security | `/app/security` | Financial capability locks and security release requirements |
+| Launch | `/app/launch` | 20 milestone checkboxes and independent acceptance gates |
+
+All nine sidebar destinations render their own workspace. No offline swap execution, synthetic charts, paper positions, simulated loan markets, or fabricated bridge deposits are exposed in the application. Real financial settlement remains unavailable until independently verified.
+
+
 [**20-milestone implementation and blockers**](docs/MILESTONES_02_20.md) · [**Architecture audit**](docs/MILESTONE_01_ARCHITECTURE.md) · [**Milestones 4–8 testnet acceptance**](docs/M04_M08_TESTNET_ACCEPTANCE.md) · [**Milestones 9–17 protocol acceptance**](docs/M09_M17_PROTOCOL_ACCEPTANCE.md) · [**M18–20 checkbox acceptance**](docs/M18_M20_FINAL_CHECKLIST.md) · [**All 20 milestone crossboxes**](docs/MILESTONES_02_20.md)
 
 **Beldex wallet integration app** · Native TESTNET BDX · Public token registry · Protocol readiness
