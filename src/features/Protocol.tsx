@@ -131,7 +131,7 @@ export function LaunchPage({ walletNetwork, walletHeight, walletTransfer, wallet
           return <tr key={cap.id}>
             <td><b>{cap.label}</b></td>
             <td>{cap.state === 'testnet-wallet' ? 'SDK testnet transfer' : cap.state === 'signed-proposal' ? 'Off-chain signature' : cap.state}</td>
-            <td><span className={'side-pill ' + (available.available ? 'neutral' : 'short')}>{available.available ? 'SUPPORTED PATH' : 'UNAVAILABLE'}</span></td>
+            <td><span className={'side-pill ' + (available.available ? 'neutral' : 'short')}>{!available.available ? 'BLOCKED / NOT READY' : cap.state === 'demo-only' ? 'SIMULATION' : cap.state === 'signed-proposal' ? 'SIGNATURE ONLY' : cap.state === 'testnet-wallet' ? 'TESTNET WALLET' : 'READ ONLY'}</span></td>
             <td className="readiness-requirement">{available.explanation}</td>
           </tr>
         })}
