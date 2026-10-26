@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Check, ChevronDown,
-  LockKeyhole, Menu, ShieldCheck, Wallet, X
+  Menu, ShieldCheck, Wallet, X
 } from 'lucide-react'
 import './landing.css'
 
