@@ -1,44 +1,47 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import Landing, { LogoIcon } from './Landing'
+import Landing from './Landing'
 
-const rendered = renderToStaticMarkup(<Landing onEnter={()=>{}}/>)
+const html=renderToStaticMarkup(<Landing onEnter={()=>{}}/>)
 
-describe('Boomerang full-viewport pixel-specific homepage',()=>{
-  it('renders the exact SVG logo geometry and brand wordmark',()=>{
-    const logo=renderToStaticMarkup(<LogoIcon className="halo-h-6 halo-w-6 halo-text-[#191919]"/>)
-    expect(logo).toContain('viewBox="0 0 256 256"')
-    expect(logo).toContain('fill="currentColor"')
-    expect(logo).toContain('M 144 256 L 27.598 256 L 144 139.598 Z M 256 207.5 L 200 256 L 200 56 L 0 56 L 48 0 L 256 0 Z M 0 204.402 L 0 112 L 92.402 112 Z')
-    expect(rendered).toContain('Boomerang')
+describe('HOXO cinematic Beldex homepage',()=>{
+  it('uses HOXO and Beldex branding instead of the previous template',()=>{
+    expect(html).toContain('HOXO')
+    expect(html).toContain('ON BELDEX')
+    expect(html).toContain('HOXO cinematic Beldex homepage')
+    expect(html).not.toContain('Boomerang')
+    expect(html).not.toContain('Book A Demo')
+    expect(html).not.toContain('Conversational AI')
   })
-  it('renders one fullscreen composition with prescribed heading, subcopy and panel',()=>{
-    expect(rendered).toContain('Build lasting<br/>relationships.')
-    expect(rendered).toContain('Conversational AI platform for modern financial institutions — agents that handle the full borrower lifecycle across email, SMS, and voice.')
-    expect(rendered).toContain('WHAT DO WE DO?')
-    expect(rendered).toContain('Conversations that')
-    expect(rendered).toContain('build momentum')
-    expect(rendered).toContain('Conversational AI built for regulated financial institutions. Agents that hold a real conversation, plug into the systems you run, and show their work.')
-    expect(rendered).toContain('halo-h-screen')
-    expect(rendered).toContain('halo-mt-auto')
-    expect(rendered).toContain('halo-border-b-0')
-  })
-  it('renders fixed transparent nav and exact link labels and hrefs',()=>{
-    expect(rendered).toContain('halo-fixed')
-    for(const [label,link] of [['Product','#product'],['Solutions','#solutions'],['Pricing','#pricing'],['Company','#company']]){
-      expect(rendered).toContain('href="'+link+'"')
-      expect(rendered).toContain('>'+label+'</a>')
-      expect(rendered).toContain('id="'+link.slice(1)+'"')
+  it('renders the layered cinematic scene with the correct document order',()=>{
+    for(const role of ['sky-img','back-four','back-bazaar','splitframe-left','splitframe-right','bridge-img','frame-two-img','shade']){
+      expect(html).toContain(role)
     }
-    expect((rendered.match(/Book A Demo/g)??[])).toHaveLength(2)
+    expect(html.indexOf('sky-img')).toBeLessThan(html.indexOf('back-four'))
+    expect(html.indexOf('back-four')).toBeLessThan(html.indexOf('back-bazaar'))
+    expect(html.indexOf('back-bazaar')).toBeLessThan(html.indexOf('hero-title'))
+    expect(html.indexOf('hero-title')).toBeLessThan(html.indexOf('bridge-img'))
+    expect(html.indexOf('bridge-img')).toBeLessThan(html.indexOf('frame-two-img'))
+    expect(html.indexOf('frame-two-img')).toBeLessThan(html.indexOf('class="shade"'))
+    expect(html).toContain('class="intro-copy"')
+    expect(html).toContain('story-panel-bridge')
+    expect(html).toContain('story-panel-bazaar')
   })
-  it('renders precisely three interactive feature rows, not dashboard stats or cards',()=>{
-    for(const label of ['01','02','03','Conversational','Connected','Compliant'])expect(rendered).toContain(label)
-    expect((rendered.match(/halo-bg-\[#F4F3F3\]/g)??[])).toHaveLength(3)
-    expect((rendered.match(/lucide-arrow-right/g)??[])).toHaveLength(3)
-    expect(rendered).not.toContain('Savings that bloom')
-    expect(rendered).not.toContain('Meet USD Halo')
-    expect(rendered).not.toContain('Discover it')
-    expect(rendered).not.toContain('FakeChart')
+  it('provides five real feature cards repeated in three carousel sets',()=>{
+    expect((html.match(/class="sight-card"/g)||[])).toHaveLength(15)
+    expect(html).toContain('data-sight-index="5"')
+    expect(html).toContain('data-sight-index="14"')
+    for(const name of ['Overview','Beldex Testnet','Swap','Perpetuals','Security']){
+      expect(html).toContain('Open '+name+' section')
+    }
+    expect(html).toContain('Previous feature')
+    expect(html).toContain('Next feature')
+  })
+  it('describes only live BDX testnet tools and clearly labels upcoming markets',()=>{
+    expect(html).toContain('native BDX testnet transfers')
+    expect(html).toContain('wallet data is never simulated')
+    expect(html).toContain('in development')
+    expect(html).toContain('Explore HOXO')
+    expect(html).toContain('Open HOXO app')
   })
 })
