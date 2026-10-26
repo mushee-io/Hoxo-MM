@@ -34,8 +34,6 @@ export default function Landing({onEnter}:Props){
   const sectionRef=useRef<HTMLElement>(null)
   const trackRef=useRef<HTMLDivElement>(null)
   const controlsRef=useRef<HTMLDivElement>(null)
-  const navigate=useRef(onEnter)
-  navigate.current=onEnter
   useEffect(()=>{
     const section=sectionRef.current,track=trackRef.current,controls=controlsRef.current
     if(!section||!track||!controls)return
@@ -71,7 +69,6 @@ export default function Landing({onEnter}:Props){
       const index=Number(card.dataset.sightIndex)
       if(!Number.isFinite(index))return
       active=index;updateSlider()
-      navigate.current(sights[index%count].page)
     }
     function cardKeys(event:KeyboardEvent){
       if(event.key!=='Enter'&&event.key!==' ')return
