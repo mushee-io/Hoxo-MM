@@ -4,44 +4,47 @@ import Landing from './Landing'
 
 const html=renderToStaticMarkup(<Landing onEnter={()=>{}}/>)
 
-describe('HOXO cinematic Beldex homepage',()=>{
-  it('uses HOXO and Beldex branding instead of the previous template',()=>{
+describe('HOXO orbital cinematic homepage',()=>{
+  it('renders original HOXO branding with no abandoned template content',()=>{
     expect(html).toContain('HOXO')
     expect(html).toContain('ON BELDEX')
-    expect(html).toContain('HOXO cinematic Beldex homepage')
+    expect(html).toContain('Finance in')
+    expect(html).toContain('new orbit.')
     expect(html).not.toContain('Boomerang')
+    expect(html).not.toContain('Mostar')
     expect(html).not.toContain('Book A Demo')
-    expect(html).not.toContain('Conversational AI')
   })
-  it('renders the layered cinematic scene with the correct document order',()=>{
-    for(const role of ['sky-img','back-four','back-bazaar','splitframe-left','splitframe-right','bridge-img','frame-two-img','shade']){
-      expect(html).toContain(role)
-    }
-    expect(html.indexOf('sky-img')).toBeLessThan(html.indexOf('back-four'))
-    expect(html.indexOf('back-four')).toBeLessThan(html.indexOf('back-bazaar'))
-    expect(html.indexOf('back-bazaar')).toBeLessThan(html.indexOf('hero-title'))
-    expect(html.indexOf('hero-title')).toBeLessThan(html.indexOf('bridge-img'))
-    expect(html.indexOf('bridge-img')).toBeLessThan(html.indexOf('frame-two-img'))
-    expect(html.indexOf('frame-two-img')).toBeLessThan(html.indexOf('class="shade"'))
-    expect(html).toContain('class="intro-copy"')
-    expect(html).toContain('story-panel-bridge')
-    expect(html).toContain('story-panel-bazaar')
+
+  it('uses reliable self-contained SVG and CSS art instead of broken remote images',()=>{
+    expect(html).toContain('hoxo-orbit-sphere')
+    expect(html).toContain('hoxo-orbit-ring-outer')
+    expect(html).toContain('hoxo-orbit-line')
+    expect(html).toContain('hoxo-grid-surface')
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('raft-blast-61784561')
   })
-  it('provides five real feature cards repeated in three carousel sets',()=>{
-    expect((html.match(/class="sight-card"/g)||[])).toHaveLength(15)
-    expect(html).toContain('data-sight-index="5"')
-    expect(html).toContain('data-sight-index="14"')
-    for(const name of ['Overview','Beldex Testnet','Swap','Perpetuals','Security']){
-      expect(html).toContain('Open '+name+' section')
-    }
+
+  it('contains four cinematic chapters with linked app destinations',()=>{
+    expect(html).toContain('hoxo-scene-hero')
+    expect(html).toContain('hoxo-scene-wallet')
+    expect(html).toContain('hoxo-scene-markets')
+    expect(html).toContain('hoxo-scene-explore')
+    expect(html).toContain('Primary navigation')
+    expect(html).toContain('Explore Testnet')
+    expect(html).toContain('Launch App')
     expect(html).toContain('Previous feature')
     expect(html).toContain('Next feature')
+    expect((html.match(/aria-label="Go to chapter/g)||[])).toHaveLength(4)
   })
-  it('describes only live BDX testnet tools and clearly labels upcoming markets',()=>{
-    expect(html).toContain('native BDX testnet transfers')
-    expect(html).toContain('wallet data is never simulated')
-    expect(html).toContain('in development')
-    expect(html).toContain('Explore HOXO')
-    expect(html).toContain('Open HOXO app')
+
+  it('describes testnet availability truthfully and labels upcoming markets',()=>{
+    expect(html).toContain('native BDX testnet tools')
+    expect(html).toContain('no invented balances')
+    expect(html).toContain('NO SIMULATED BALANCES')
+    expect(html).toContain('MARKETS IN DEVELOPMENT')
+    expect(html).toContain('not live trading services')
+    for(const section of ['Swap','Perpetuals','Lending','Routes']){
+      expect(html).toContain(section)
+    }
   })
 })
